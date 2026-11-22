@@ -1,571 +1,456 @@
+import os
+import sys
 import streamlit as st
 
-# --------------------------------------------------
-# PAGE CONFIGURATION  (only ONE allowed in the app)
-# --------------------------------------------------
+# =====================================================
+# 1. PAGE CONFIGURATION
+# =====================================================
 
 st.set_page_config(
     page_title="Aarogya-AI | Intelligent Wellness",
     page_icon="🩺",
     layout="wide",
-    initial_sidebar_state="auto"
+    initial_sidebar_state="expanded"
 )
 
-# --------------------------------------------------
-# GLOBAL CSS DESIGN SYSTEM (MODERN GLOSSY PURPLE)
-# --------------------------------------------------
+# =====================================================
+# 2. ROOT DIRECTORY
+# =====================================================
+
+ROOT_DIR = os.path.dirname(os.path.abspath(__file__))
+
+if ROOT_DIR not in sys.path:
+    sys.path.insert(0, ROOT_DIR)
+
+# =====================================================
+# 3. LOAD GLOBAL UI THEME FROM Ui.py
+# =====================================================
+
+try:
+    from Ui import apply_glossy_purple_theme
+
+    apply_glossy_purple_theme()
+
+except Exception as e:
+    st.error("Unable to load Ui.py")
+    st.exception(e)
+    st.stop()
+
+# =====================================================
+# 4. MODERN NAVIGATION CSS
+# =====================================================
 
 st.markdown("""
 <style>
 
-/* ===== FONTS ===== */
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
-
-* {
-    font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
-}
-
-/* ===== APP BACKGROUND ===== */
+/* APP BACKGROUND */
 .stApp {
     background:
-        radial-gradient(circle at 12% 10%, rgba(124, 58, 237, 0.09), transparent 38%),
-        radial-gradient(circle at 88% 18%, rgba(147, 51, 234, 0.08), transparent 40%),
-        #F6F4FD;
-    color: #1E293B;
+        radial-gradient(
+            circle at 10% 10%,
+            rgba(139, 92, 246, 0.12),
+            transparent 40%
+        ),
+        radial-gradient(
+            circle at 90% 15%,
+            rgba(192, 132, 252, 0.12),
+            transparent 40%
+        ),
+        linear-gradient(
+            145deg,
+            #FAF7FF,
+            #F3ECFF,
+            #EDE9FE
+        );
 }
 
-/* ===== HIDE DEFAULT STREAMLIT DECORATION (KEEP MOBILE SIDEBAR TOGGLE VISIBLE) ===== */
-#MainMenu { visibility: hidden; }
-footer { visibility: hidden; }
-[data-testid="stDecoration"] { display: none; }
-[data-testid="stSidebarNav"] { display: none !important; }
-
-header[data-testid="stHeader"] {
-    background: transparent !important;
-    pointer-events: none;
-}
-
-[data-testid="collapsedControl"],
-button[kind="header"] {
-    pointer-events: auto !important;
-    visibility: visible !important;
-    opacity: 1 !important;
-    color: #5B21B6 !important;
-    background: rgba(255, 255, 255, 0.94) !important;
-    backdrop-filter: blur(12px) !important;
-    border: 1px solid rgba(124, 58, 237, 0.28) !important;
-    border-radius: 12px !important;
-    box-shadow: 0 4px 16px rgba(91, 33, 182, 0.18) !important;
-}
-
-/* ===== MAIN CONTENT AREA ===== */
-.block-container {
-    padding: 2rem 2.5rem 3rem 2.5rem;
-    max-width: 1280px;
-}
-
-/* ===== GLOSSY PURPLE SIDEBAR ===== */
+/* SIDEBAR */
 [data-testid="stSidebar"] {
-    background: linear-gradient(180deg, #FDFCFF 0%, #F3EEFF 55%, #EAE2FF 100%);
-    backdrop-filter: blur(20px);
-    -webkit-backdrop-filter: blur(20px);
-    border-right: 1px solid rgba(124, 58, 237, 0.16);
-    box-shadow: 6px 0 30px rgba(91, 33, 182, 0.08);
+    background: linear-gradient(
+        180deg,
+        #FFFFFF 0%,
+        #F6F0FF 50%,
+        #EDE5FF 100%
+    );
+
+    border-right: 1px solid #E4D7FF;
+    box-shadow: 5px 0 25px rgba(91, 33, 182, 0.07);
 }
 
 [data-testid="stSidebar"] > div:first-child {
-    padding: 0;
+    padding-top: 0.8rem;
 }
 
-/* ===== BRAND BANNER ===== */
+/* BRAND */
 .brand-box {
-    margin: 14px 14px 10px 14px;
-    padding: 20px 18px;
-    border-radius: 20px;
-    background: linear-gradient(135deg, #4C1D95 0%, #6D28D9 55%, #8B5CF6 100%);
-    box-shadow:
-        0 10px 24px rgba(76, 29, 149, 0.28),
-        inset 0 1px 1px rgba(255, 255, 255, 0.35);
-    border: 1px solid rgba(255, 255, 255, 0.22);
-    position: relative;
-    overflow: hidden;
-}
+    margin: 10px 12px 22px;
+    padding: 20px 16px;
 
-.brand-box::before {
-    content: "";
-    position: absolute;
-    top: -45%;
-    right: -25%;
-    width: 140px;
-    height: 140px;
-    background: radial-gradient(circle, rgba(255, 255, 255, 0.28), transparent 70%);
-    pointer-events: none;
+    border-radius: 20px;
+
+    background: linear-gradient(
+        135deg,
+        #2E1065 0%,
+        #5B21B6 48%,
+        #9333EA 100%
+    );
+
+    border: 1px solid rgba(255,255,255,0.3);
+
+    box-shadow:
+        0 12px 28px rgba(91,33,182,0.25),
+        inset 0 1px 0 rgba(255,255,255,0.25);
 }
 
 .brand-title {
+    color: #FFFFFF;
     font-size: 20px;
     font-weight: 800;
-    color: #FFFFFF;
-    letter-spacing: -0.3px;
-    line-height: 1.2;
+    letter-spacing: -0.4px;
 }
 
 .brand-sub {
-    font-size: 11.5px;
-    color: rgba(255, 255, 255, 0.86);
-    margin-top: 5px;
-    font-weight: 500;
-}
-
-.nav-caption {
+    color: #E9D5FF;
     font-size: 10.5px;
-    font-weight: 700;
-    color: #6D28D9;
-    letter-spacing: 1px;
-    text-transform: uppercase;
-    padding: 12px 20px 6px 20px;
+    font-weight: 500;
+    margin-top: 5px;
 }
 
-/* ===== CLEAN GLOSSY NAV ITEMS (NO RADIO CIRCLES) ===== */
-div[data-testid="stSidebar"] .stRadio > label {
+/* NAVIGATION HEADING */
+.nav-caption {
+    color: #7C3AED;
+    font-size: 10px;
+    font-weight: 800;
+    letter-spacing: 1.5px;
+    padding: 5px 18px 13px;
+}
+
+/* HIDE RADIO LABEL */
+[data-testid="stSidebar"] .stRadio > label {
     display: none !important;
 }
 
-div[data-testid="stSidebar"] .stRadio > div[role="radiogroup"] {
+/* NAVIGATION GROUP */
+[data-testid="stSidebar"] .stRadio
+> div[role="radiogroup"] {
+
     display: flex;
     flex-direction: column;
-    gap: 6px;
-    padding: 4px 14px 10px 14px;
+    gap: 7px;
+
+    padding: 0 12px 15px;
 }
 
-/* Hide radio circle input & its visual wrapper */
-div[data-testid="stSidebar"] .stRadio [role="radiogroup"] label > div:first-child {
+/* HIDE RADIO CIRCLE */
+[data-testid="stSidebar"] .stRadio
+[role="radiogroup"] label > div:first-child {
     display: none !important;
 }
 
-div[data-testid="stSidebar"] .stRadio [role="radiogroup"] > label {
-    width: 100%;
-    margin: 0 !important;
+/* NAVIGATION ITEM */
+[data-testid="stSidebar"] .stRadio
+[role="radiogroup"] > label {
+
+    min-height: 43px;
     padding: 10px 14px !important;
-    border-radius: 14px !important;
-    background: rgba(255, 255, 255, 0.72) !important;
-    border: 1px solid rgba(124, 58, 237, 0.14) !important;
-    box-shadow: 0 2px 8px rgba(91, 33, 182, 0.04) !important;
-    transition: all 0.22s ease !important;
-    cursor: pointer !important;
-    display: flex !important;
-    align-items: center !important;
-}
 
-div[data-testid="stSidebar"] .stRadio [role="radiogroup"] > label:hover {
-    background: rgba(139, 92, 246, 0.14) !important;
-    border-color: rgba(124, 58, 237, 0.36) !important;
-    transform: translateX(4px) !important;
-    box-shadow: 0 6px 16px rgba(91, 33, 182, 0.12) !important;
-}
-
-div[data-testid="stSidebar"] .stRadio [role="radiogroup"] > label:has(input:checked) {
-    background: linear-gradient(135deg, #5B21B6 0%, #7C3AED 60%, #9333EA 100%) !important;
-    border: 1px solid rgba(255, 255, 255, 0.28) !important;
-    box-shadow:
-        0 8px 20px rgba(91, 33, 182, 0.32),
-        inset 0 1px 1px rgba(255, 255, 255, 0.35) !important;
-    transform: translateX(4px) !important;
-}
-
-div[data-testid="stSidebar"] .stRadio div[data-testid="stMarkdownContainer"] {
-    width: 100%;
-}
-
-div[data-testid="stSidebar"] .stRadio div[data-testid="stMarkdownContainer"] p {
-    font-size: 13.5px !important;
-    font-weight: 600 !important;
-    color: #2E1065 !important;
     margin: 0 !important;
-    padding: 0 !important;
-    line-height: 1.35 !important;
+
+    border-radius: 13px !important;
+
+    background: transparent !important;
+    border: 1px solid transparent !important;
+
+    transition: all 0.22s ease !important;
+
+    cursor: pointer !important;
 }
 
-div[data-testid="stSidebar"] .stRadio [role="radiogroup"] > label:has(input:checked) div[data-testid="stMarkdownContainer"] p {
+/* HOVER EFFECT */
+[data-testid="stSidebar"] .stRadio
+[role="radiogroup"] > label:hover {
+
+    background: #EDE5FF !important;
+    border-color: #D8C5FF !important;
+
+    transform: translateX(3px);
+}
+
+/* ACTIVE NAVIGATION */
+[data-testid="stSidebar"] .stRadio
+[role="radiogroup"] > label:has(input:checked) {
+
+    background: linear-gradient(
+        110deg,
+        #5B21B6,
+        #7C3AED,
+        #9333EA
+    ) !important;
+
+    border: 1px solid #A78BFA !important;
+
+    box-shadow:
+        0 7px 18px rgba(109,40,217,0.25);
+}
+
+/* NAVIGATION TEXT */
+[data-testid="stSidebar"] .stRadio
+div[data-testid="stMarkdownContainer"] p {
+
+    color: #4C1D95 !important;
+
+    font-size: 12.5px !important;
+    font-weight: 650 !important;
+
+    margin: 0 !important;
+    line-height: 1.4 !important;
+}
+
+/* ACTIVE TEXT */
+[data-testid="stSidebar"] .stRadio
+[role="radiogroup"] > label:has(input:checked)
+div[data-testid="stMarkdownContainer"] p {
+
     color: #FFFFFF !important;
     font-weight: 700 !important;
 }
 
-/* ===== SAFETY FOOTER CARD ===== */
+/* SAFETY NOTICE */
 .sidebar-safety-box {
-    margin: 12px 14px 18px 14px;
-    padding: 13px 14px;
+
+    margin: 14px 12px 18px;
+    padding: 15px;
+
     border-radius: 15px;
-    background: rgba(255, 255, 255, 0.78);
-    backdrop-filter: blur(10px);
-    border: 1px solid rgba(124, 58, 237, 0.16);
-    font-size: 11px;
+
+    background: rgba(255,255,255,0.85);
+
+    border: 1px solid #DDD0FF;
+
+    box-shadow: 0 5px 14px rgba(91,33,182,0.06);
+
     color: #475569;
-    line-height: 1.55;
+
+    font-size: 11px;
+    line-height: 1.7;
 }
 
-/* ===== GLOBAL CARD ===== */
-.card {
-    background: rgba(255, 255, 255, 0.9);
-    backdrop-filter: blur(12px);
-    border-radius: 20px;
-    border: 1px solid rgba(124, 58, 237, 0.12);
-    box-shadow: 0 4px 20px rgba(91, 33, 182, 0.06);
-    padding: 24px;
-    transition: all 0.25s ease;
+/* MAIN CONTENT */
+.block-container {
+    padding-top: 2rem;
+    padding-bottom: 3rem;
+    max-width: 1280px;
 }
 
-.card:hover {
-    box-shadow: 0 8px 28px rgba(91, 33, 182, 0.12);
-    transform: translateY(-2px);
-}
-
-/* ===== PAGE HEADER CARD ===== */
-.page-header {
-    background: linear-gradient(135deg, #4C1D95 0%, #6D28D9 55%, #8B5CF6 100%);
-    border-radius: 22px;
-    padding: 32px 36px;
-    color: white;
-    margin-bottom: 28px;
-    box-shadow: 0 10px 30px rgba(91, 33, 182, 0.24);
-    animation: fadeDown 0.6s ease;
-}
-
-.page-header h1 {
-    color: white !important;
-    font-size: 28px;
-    font-weight: 800;
-    margin: 0 0 8px 0;
-    letter-spacing: -0.5px;
-}
-
-.page-header p {
-    color: rgba(255, 255, 255, 0.88);
-    font-size: 15px;
-    margin: 0;
-    font-weight: 400;
-}
-
-/* ===== METRIC CARD ===== */
-.metric-card {
-    background: rgba(255, 255, 255, 0.94);
-    border-radius: 18px;
-    padding: 22px;
-    border: 1px solid rgba(124, 58, 237, 0.12);
-    box-shadow: 0 4px 16px rgba(91, 33, 182, 0.06);
-    transition: all 0.25s ease;
-    animation: fadeUp 0.6s ease;
-}
-
-.metric-card:hover {
-    transform: translateY(-4px);
-    box-shadow: 0 10px 24px rgba(91, 33, 182, 0.14);
-}
-
-.metric-icon {
-    font-size: 28px;
-    margin-bottom: 10px;
-    display: block;
-}
-
-.metric-label {
-    font-size: 12px;
-    font-weight: 600;
-    color: #94A3B8;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-    margin-bottom: 6px;
-}
-
-.metric-value {
-    font-size: 26px;
-    font-weight: 800;
-    color: #1E293B;
-    letter-spacing: -0.5px;
-}
-
-.metric-sub {
-    font-size: 12px;
-    color: #94A3B8;
-    margin-top: 4px;
-}
-
-/* ===== SECTION TITLE ===== */
-.section-title {
-    font-size: 20px;
-    font-weight: 700;
-    color: #1E293B;
-    margin: 28px 0 16px 0;
-    letter-spacing: -0.3px;
-}
-
-.section-subtitle {
-    font-size: 14px;
-    color: #64748B;
-    margin-top: -10px;
-    margin-bottom: 18px;
-}
-
-/* ===== INSIGHT / INFO CARDS ===== */
-.insight-card {
-    background: linear-gradient(135deg, #F0EDFD 0%, #EDE9FA 100%);
-    border: 1px solid rgba(124, 58, 237, 0.18);
-    border-left: 4px solid #7C3AED;
-    border-radius: 14px;
-    padding: 18px 20px;
-    margin: 12px 0;
-    color: #1E293B;
-    animation: fadeUp 0.7s ease;
-}
-
-.success-card {
-    background: #F0FDF4;
-    border: 1px solid #86EFAC;
-    border-left: 4px solid #16A34A;
-    border-radius: 14px;
-    padding: 18px 20px;
-    color: #15803D;
-}
-
-.warning-card {
-    background: #FFFBEB;
-    border: 1px solid #FDE68A;
-    border-left: 4px solid #F59E0B;
-    border-radius: 14px;
-    padding: 18px 20px;
-    color: #92400E;
-}
-
-.danger-card {
-    background: #FFF1F2;
-    border: 1px solid #FECDD3;
-    border-left: 4px solid #DC2626;
-    border-radius: 14px;
-    padding: 18px 20px;
-    color: #9F1239;
-}
-
-.safety-card {
-    background: linear-gradient(135deg, #F0FDFA 0%, #CCFBF1 100%);
-    border: 1px solid #99F6E4;
-    border-left: 4px solid #0F766E;
-    border-radius: 14px;
-    padding: 18px 20px;
-    color: #134E4A;
-    margin-top: 28px;
-}
-
-/* ===== BUTTONS ===== */
+/* BUTTONS */
 div.stButton > button {
     border-radius: 12px;
-    font-weight: 600;
-    font-size: 14px;
-    border: 1.5px solid #E2E8F0;
     transition: all 0.2s ease;
-    padding: 8px 20px;
 }
 
 div.stButton > button:hover {
     transform: translateY(-2px);
-    box-shadow: 0 4px 14px rgba(124, 58, 237, 0.2);
-    border-color: #7C3AED;
-    color: #5B21B6;
 }
 
-div.stDownloadButton > button {
-    border-radius: 12px;
-    font-weight: 600;
-    border: 1.5px solid #E2E8F0;
-    transition: all 0.2s ease;
-}
+/* MOBILE RESPONSIVE */
+@media(max-width:768px) {
 
-div.stDownloadButton > button:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 4px 14px rgba(124, 58, 237, 0.2);
-}
-
-/* ===== FORM ELEMENTS ===== */
-div.stTextInput > div > div > input,
-div.stNumberInput > div > div > input,
-div.stSelectbox > div > div {
-    border-radius: 12px;
-    border: 1.5px solid #E2E8F0;
-    font-size: 14px;
-    transition: border-color 0.2s ease;
-}
-
-div.stTextInput > div > div > input:focus,
-div.stNumberInput > div > div > input:focus {
-    border-color: #7C3AED;
-    box-shadow: 0 0 0 3px rgba(124, 58, 237, 0.12);
-}
-
-/* ===== DATAFRAME ===== */
-[data-testid="stDataFrame"] {
-    border-radius: 14px;
-    overflow: hidden;
-    border: 1px solid #EDE9FA;
-}
-
-/* ===== PROGRESS BAR ===== */
-div.stProgress > div > div > div {
-    background: linear-gradient(90deg, #7C3AED, #5B21B6);
-    border-radius: 10px;
-}
-
-div.stProgress > div > div {
-    border-radius: 10px;
-    background: #EDE9FA;
-}
-
-/* ===== CHAT ===== */
-[data-testid="stChatMessage"] {
-    border-radius: 16px;
-    animation: fadeUp 0.3s ease;
-    border: 1px solid #F1F5F9;
-    margin: 6px 0;
-}
-
-.stChatInputContainer {
-    border-radius: 18px !important;
-    border: 2px solid #EDE9FA !important;
-}
-
-/* ===== MOBILE RESPONSIVE ADJUSTMENTS ===== */
-@media (max-width: 768px) {
     .block-container {
-        padding: 1.25rem 1rem 2.5rem 1rem !important;
+        padding: 1.2rem 1rem 2rem 1rem !important;
     }
 
-    .page-header {
-        padding: 22px 20px !important;
+    .brand-title {
+        font-size: 18px;
     }
 
-    .page-header h1 {
-        font-size: 22px !important;
-    }
-}
-
-/* ===== ANIMATIONS ===== */
-@keyframes fadeDown {
-    from { opacity: 0; transform: translateY(-18px); }
-    to   { opacity: 1; transform: translateY(0); }
-}
-
-@keyframes fadeUp {
-    from { opacity: 0; transform: translateY(18px); }
-    to   { opacity: 1; transform: translateY(0); }
-}
-
-@keyframes fadeIn {
-    from { opacity: 0; }
-    to   { opacity: 1; }
-}
-
-@keyframes float {
-    0%, 100% { transform: translateY(0px); }
-    50%       { transform: translateY(-8px); }
-}
-
-@keyframes pulse {
-    0%, 100% { transform: scale(1); }
-    50%       { transform: scale(1.05); }
-}
-
-/* ===== MISC ===== */
-h1, h2, h3 {
-    color: #1E293B;
-    letter-spacing: -0.3px;
-}
-
-hr {
-    border: none;
-    border-top: 1px solid #EDE9FA;
-    margin: 20px 0;
 }
 
 </style>
 """, unsafe_allow_html=True)
 
-
-# --------------------------------------------------
-# SIDEBAR
-# --------------------------------------------------
+# =====================================================
+# 5. SIDEBAR NAVIGATION
+# =====================================================
 
 with st.sidebar:
 
+    # BRAND SECTION
     st.markdown("""
     <div class="brand-box">
-        <div class="brand-title">🩺 AAROGYA-AI</div>
-        <div class="brand-sub">Intelligent Wellness Companion</div>
+
+        <div style="
+            display:flex;
+            align-items:center;
+            gap:12px;
+        ">
+
+            <div style="
+                background:rgba(255,255,255,0.18);
+                border:1px solid rgba(255,255,255,0.2);
+                padding:11px;
+                border-radius:14px;
+                font-size:25px;
+            ">
+                🩺
+            </div>
+
+            <div>
+                <div class="brand-title">
+                    AAROGYA-AI
+                </div>
+
+                <div class="brand-sub">
+                    Intelligent Wellness Companion
+                </div>
+            </div>
+
+        </div>
+
     </div>
     """, unsafe_allow_html=True)
 
-    st.markdown('<div class="nav-caption">Health Modules</div>', unsafe_allow_html=True)
+    # NAVIGATION HEADING
+    st.markdown(
+        '<div class="nav-caption">✦ HEALTH MODULES</div>',
+        unsafe_allow_html=True
+    )
 
-    page = st.radio(
+    # NAVIGATION OPTIONS
+    navigation = {
+        "⌂   Dashboard": "home",
+        "✧   AI Health Assistant": "assistant",
+        "♡   Health Data": "data",
+        "▥   Health Analysis": "analysis",
+        "▤   Health Report": "report",
+        "◎   Health Goals": "goals",
+        "✦   Recommendations": "recommendations",
+        "⚕   Symptom Information": "symptoms",
+        "⬡   Medication Safety": "medication",
+        "⚠   Emergency Detection": "emergency"
+    }
+
+    # SELECT PAGE
+    selected_page = st.radio(
         "Navigation",
-        [
-            "🏠  Dashboard",
-            "🤖  AI Health Assistant",
-            "❤️  Health Data",
-            "📊  Health Analysis",
-            "📄  Health Report",
-            "🎯  Health Goals",
-            "💡  Recommendations",
-            "🩺  Symptom Information",
-            "🛡️  Medication Safety",
-            "🚨  Emergency Detection"
-        ],
+        list(navigation.keys()),
+        key="main_navigation",
         label_visibility="collapsed"
     )
 
+    page_key = navigation[selected_page]
+
+    # SAFETY FOOTER
     st.markdown("""
     <div class="sidebar-safety-box">
-        🛡️ <b style="color:#4C1D95;">Safety Notice</b><br>
-        General wellness guidance only.<br>
-        Not a substitute for medical care.
+
+        <b style="color:#6D28D9;">
+            🛡️ Safety Notice
+        </b>
+
+        <br>
+
+        General wellness guidance only.
+
+        <br>
+
+        Not a substitute for professional medical care.
+
     </div>
     """, unsafe_allow_html=True)
 
 
-# --------------------------------------------------
-# PAGE ROUTER
-# --------------------------------------------------
+# =====================================================
+# 6. PAGE ROUTES
+# =====================================================
 
-def run_page(path):
-    with open(path, encoding="utf-8") as f:
-        exec(f.read(), globals())
+ROUTES = {
+
+    "home":
+        "pages/home.py",
+
+    "assistant":
+        "pages/13_AI_Health_Assistant.py",
+
+    "data":
+        "pages/3_Health_Data.py",
+
+    "analysis":
+        "pages/4_Health_Analysis.py",
+
+    "report":
+        "pages/5_Health_Report.py",
+
+    "goals":
+        "pages/7_Health_Goals.py",
+
+    "recommendations":
+        "pages/10_Health_Recommendations.py",
+
+    "symptoms":
+        "pages/9_Symptom_Information.py",
+
+    "medication":
+        "pages/11_Medication_Safety.py",
+
+    "emergency":
+        "pages/12_Emergency_Detection.py"
+}
 
 
-page_key = page.strip()
+# =====================================================
+# 7. PAGE LOADER
+# =====================================================
 
-if page_key.startswith("🏠"):
-    run_page("pages/home.py")
+def run_page(relative_path):
 
-elif page_key.startswith("🤖"):
-    run_page("pages/13_AI_Health_Assistant.py")
+    full_path = os.path.join(
+        ROOT_DIR,
+        relative_path
+    )
 
-elif page_key.startswith("❤️"):
-    run_page("pages/3_Health_Data.py")
+    # CHECK PAGE EXISTS
+    if not os.path.isfile(full_path):
 
-elif page_key.startswith("📊"):
-    run_page("pages/4_Health_Analysis.py")
+        st.error(
+            f"Page file not found: {relative_path}"
+        )
 
-elif page_key.startswith("📄"):
-    run_page("pages/5_Health_Report.py")
+        st.info(
+            "Please check the filename inside your pages folder."
+        )
 
-elif page_key.startswith("🎯"):
-    run_page("pages/7_Health_Goals.py")
+        return
 
-elif page_key.startswith("💡"):
-    run_page("pages/10_Health_Recommendations.py")
+    try:
 
-elif page_key.startswith("🩺"):
-    run_page("pages/9_Symptom_Information.py")
+        with open(
+            full_path,
+            "r",
+            encoding="utf-8"
+        ) as file:
 
-elif page_key.startswith("🛡️"):
-    run_page("pages/11_Medication_Safety.py")
+            source_code = file.read()
 
-elif page_key.startswith("🚨"):
-    run_page("pages/12_Emergency_Detection.py")
+        exec(
+            compile(
+                source_code,
+                full_path,
+                "exec"
+            ),
+            globals()
+        )
+
+    except Exception as error:
+
+        st.error(
+            f"Unable to load page: {relative_path}"
+        )
+
+        st.exception(error)
+
+
+# =====================================================
+# 8. RUN SELECTED PAGE
+# =====================================================
+
+run_page(ROUTES[page_key])
