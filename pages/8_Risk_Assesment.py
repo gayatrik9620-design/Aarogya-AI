@@ -1,29 +1,45 @@
 import os
 import sys
 import importlib.util
+from pathlib import Path
 import streamlit as st
 
 # =========================================================
 # EXPLICIT ROOT PATH & Ui.py LOADER (pages/8_Risk_Assesment.py)
 # =========================================================
 
-ROOT_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
-if ROOT_DIR not in sys.path:
-    sys.path.insert(0, ROOT_DIR)
+_auto_root = Path(__file__).resolve().parents[1]
+_local_root = Path(r"C:\Users\nehab\aarogya-ai")
+
+if (_auto_root / "Ui.py").is_file() or (_auto_root / "ui.py").is_file():
+    ROOT_DIR = _auto_root
+elif (_local_root / "Ui.py").is_file() or (_local_root / "ui.py").is_file():
+    ROOT_DIR = _local_root
+else:
+    ROOT_DIR = _auto_root
+
+if str(ROOT_DIR) not in sys.path:
+    sys.path.insert(0, str(ROOT_DIR))
 
 _ui_loaded = False
 for _candidate in ("Ui.py", "ui.py"):
-    _ui_path = os.path.join(ROOT_DIR, _candidate)
-    if os.path.exists(_ui_path):
-        _spec = importlib.util.spec_from_file_location("Ui", _ui_path)
-        _ui_mod = importlib.util.module_from_spec(_spec)
-        _spec.loader.exec_module(_ui_mod)
-        apply_glossy_purple_theme = _ui_mod.apply_glossy_purple_theme
-        render_page_banner = _ui_mod.render_page_banner
-        render_gloss_card = _ui_mod.render_gloss_card
-        render_medical_disclaimer = _ui_mod.render_medical_disclaimer
-        _ui_loaded = True
-        break
+    _ui_path = ROOT_DIR / _candidate
+    if _ui_path.is_file():
+        try:
+            _spec = importlib.util.spec_from_file_location("Ui", str(_ui_path))
+            if _spec is None or _spec.loader is None:
+                raise ImportError("Unable to create UI module loader.")
+            _ui_mod = importlib.util.module_from_spec(_spec)
+            _spec.loader.exec_module(_ui_mod)
+            apply_glossy_purple_theme = _ui_mod.apply_glossy_purple_theme
+            render_page_banner = _ui_mod.render_page_banner
+            render_gloss_card = _ui_mod.render_gloss_card
+            render_medical_disclaimer = _ui_mod.render_medical_disclaimer
+            _ui_loaded = True
+            break
+        except Exception as e:
+            st.error(f"Error loading Ui.py: {e}")
+            st.stop()
 
 if not _ui_loaded:
     st.error(f"Could not find Ui.py in {ROOT_DIR}. Please ensure Ui.py is saved in the root aarogya-ai folder.")
@@ -120,21 +136,24 @@ with st.container(border=True):
             "🧬 Age",
             min_value=1,
             max_value=120,
-            value=20
+            value=20,
+            step=1
         )
 
         sleep = st.number_input(
             "💤 Average sleep per day (hours)",
             min_value=0.0,
             max_value=24.0,
-            value=7.0
+            value=7.0,
+            step=0.5
         )
 
         steps = st.number_input(
             "🩺 Average daily steps",
             min_value=0,
             max_value=100000,
-            value=5000
+            value=5000,
+            step=100
         )
 
     with c2:
@@ -142,7 +161,8 @@ with st.container(border=True):
             "💧 Approximate water intake (litres/day)",
             min_value=0.0,
             max_value=10.0,
-            value=2.0
+            value=2.0,
+            step=0.5
         )
 
         stress = st.slider(

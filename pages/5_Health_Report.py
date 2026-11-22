@@ -10,23 +10,38 @@ import streamlit as st
 # EXPLICIT ROOT PATH & Ui.py LOADER (pages/5_Health_Report.py)
 # =========================================================
 
-ROOT_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
+_auto_root = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
+_local_root = r"C:\Users\nehab\aarogya-ai"
+
+if any(os.path.isfile(os.path.join(_auto_root, c)) for c in ("Ui.py", "ui.py")):
+    ROOT_DIR = _auto_root
+elif any(os.path.isfile(os.path.join(_local_root, c)) for c in ("Ui.py", "ui.py")):
+    ROOT_DIR = _local_root
+else:
+    ROOT_DIR = _auto_root
+
 if ROOT_DIR not in sys.path:
     sys.path.insert(0, ROOT_DIR)
 
 _ui_loaded = False
 for _candidate in ("Ui.py", "ui.py"):
     _ui_path = os.path.join(ROOT_DIR, _candidate)
-    if os.path.exists(_ui_path):
-        _spec = importlib.util.spec_from_file_location("Ui", _ui_path)
-        _ui_mod = importlib.util.module_from_spec(_spec)
-        _spec.loader.exec_module(_ui_mod)
-        apply_glossy_purple_theme = _ui_mod.apply_glossy_purple_theme
-        render_page_banner = _ui_mod.render_page_banner
-        render_gloss_card = _ui_mod.render_gloss_card
-        render_medical_disclaimer = _ui_mod.render_medical_disclaimer
-        _ui_loaded = True
-        break
+    if os.path.isfile(_ui_path):
+        try:
+            _spec = importlib.util.spec_from_file_location("Ui", _ui_path)
+            if _spec is None or _spec.loader is None:
+                raise ImportError("Unable to create UI module loader.")
+            _ui_mod = importlib.util.module_from_spec(_spec)
+            _spec.loader.exec_module(_ui_mod)
+            apply_glossy_purple_theme = _ui_mod.apply_glossy_purple_theme
+            render_page_banner = _ui_mod.render_page_banner
+            render_gloss_card = _ui_mod.render_gloss_card
+            render_medical_disclaimer = _ui_mod.render_medical_disclaimer
+            _ui_loaded = True
+            break
+        except Exception as e:
+            st.error(f"Error loading Ui.py: {e}")
+            st.stop()
 
 if not _ui_loaded:
     st.error(f"Could not find Ui.py in {ROOT_DIR}. Please ensure Ui.py is saved in the root aarogya-ai folder.")
@@ -140,21 +155,37 @@ render_page_banner(
 # DATABASE
 # =========================================================
 
+DB_PATH = os.path.join(ROOT_DIR, "health_data.db")
+
+
 @st.cache_data(ttl=60)
-def _load_report_data():
+def _load_report_data(db_path: str):
+    conn = None
     try:
-        conn = sqlite3.connect("health_data.db")
-        df = pd.read_sql_query(
+        conn = sqlite3.connect(db_path)
+        conn.execute("""
+        CREATE TABLE IF NOT EXISTS health_data (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            date TEXT,
+            weight REAL,
+            steps INTEGER,
+            sleep REAL
+        )
+        """)
+        conn.commit()
+        loaded_df = pd.read_sql_query(
             "SELECT date, weight, steps, sleep FROM health_data ORDER BY date DESC",
             conn
         )
-        conn.close()
-        return df
+        return loaded_df
     except Exception:
         return None
+    finally:
+        if conn is not None:
+            conn.close()
 
 
-_df_result = _load_report_data()
+_df_result = _load_report_data(DB_PATH)
 if _df_result is None:
     st.error("Unable to load health data.")
     st.stop()
@@ -180,7 +211,11 @@ if df.empty:
 # DATA PROCESSING
 # =========================================================
 
+df = df.copy()
 df["date"] = pd.to_datetime(df["date"], errors="coerce")
+for col, default_val in (("weight", 0.0), ("steps", 0), ("sleep", 0.0)):
+    df[col] = pd.to_numeric(df[col], errors="coerce").fillna(default_val)
+
 df = df.dropna(subset=["date"])
 
 if df.empty:
@@ -191,9 +226,9 @@ if df.empty:
 df = df.sort_values("date", ascending=False).reset_index(drop=True)
 latest = df.iloc[0]
 
-avg_weight = df["weight"].mean()
-avg_steps = df["steps"].mean()
-avg_sleep = df["sleep"].mean()
+avg_weight = float(df["weight"].mean())
+avg_steps = float(df["steps"].mean())
+avg_sleep = float(df["sleep"].mean())
 
 generated_time = datetime.now().strftime("%d %B %Y, %I:%M %p")
 
@@ -236,21 +271,21 @@ with lc1:
     st.markdown(f"""
     <div class="gloss-kpi-box anim-1">
         <div class="gloss-kpi-lbl"><span class="med-float">⚖️</span> Latest Weight</div>
-        <div class="gloss-kpi-num">{latest['weight']:.1f} kg</div>
+        <div class="gloss-kpi-num">{float(latest['weight']):.1f} kg</div>
     </div>""", unsafe_allow_html=True)
 
 with lc2:
     st.markdown(f"""
     <div class="gloss-kpi-box anim-2">
         <div class="gloss-kpi-lbl"><span class="med-float">🩺</span> Latest Steps</div>
-        <div class="gloss-kpi-num">{int(latest['steps']):,}</div>
+        <div class="gloss-kpi-num">{int(float(latest['steps'])):,}</div>
     </div>""", unsafe_allow_html=True)
 
 with lc3:
     st.markdown(f"""
     <div class="gloss-kpi-box anim-3">
         <div class="gloss-kpi-lbl"><span class="med-float">💤</span> Latest Sleep</div>
-        <div class="gloss-kpi-num">{latest['sleep']:.1f} hrs</div>
+        <div class="gloss-kpi-num">{float(latest['sleep']):.1f} hrs</div>
     </div>""", unsafe_allow_html=True)
 
 
@@ -279,9 +314,9 @@ with sc3:
 st.markdown('<div class="purple-sec-title anim-2">💊 Report Summary</div>', unsafe_allow_html=True)
 
 summary_text = (
-    f"Latest recorded weight: <b>{latest['weight']:.1f} kg</b> · "
-    f"Latest activity: <b>{int(latest['steps']):,} steps</b> · "
-    f"Latest sleep: <b>{latest['sleep']:.1f} hrs</b><br><br>"
+    f"Latest recorded weight: <b>{float(latest['weight']):.1f} kg</b> · "
+    f"Latest activity: <b>{int(float(latest['steps'])):,} steps</b> · "
+    f"Latest sleep: <b>{float(latest['sleep']):.1f} hrs</b><br><br>"
     f"Overall averages across <b>{len(df)}</b> record(s): "
     f"<b>{avg_weight:.2f} kg</b> weight, "
     f"<b>{avg_steps:.0f}</b> daily steps, and "

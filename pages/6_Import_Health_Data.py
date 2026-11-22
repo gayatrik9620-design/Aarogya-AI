@@ -10,23 +10,38 @@ import streamlit as st
 # EXPLICIT ROOT PATH & Ui.py LOADER (pages/6_Import_Health_Data.py)
 # =========================================================
 
-ROOT_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
+_auto_root = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
+_local_root = r"C:\Users\nehab\aarogya-ai"
+
+if any(os.path.isfile(os.path.join(_auto_root, c)) for c in ("Ui.py", "ui.py")):
+    ROOT_DIR = _auto_root
+elif any(os.path.isfile(os.path.join(_local_root, c)) for c in ("Ui.py", "ui.py")):
+    ROOT_DIR = _local_root
+else:
+    ROOT_DIR = _auto_root
+
 if ROOT_DIR not in sys.path:
     sys.path.insert(0, ROOT_DIR)
 
 _ui_loaded = False
 for _candidate in ("Ui.py", "ui.py"):
     _ui_path = os.path.join(ROOT_DIR, _candidate)
-    if os.path.exists(_ui_path):
-        _spec = importlib.util.spec_from_file_location("Ui", _ui_path)
-        _ui_mod = importlib.util.module_from_spec(_spec)
-        _spec.loader.exec_module(_ui_mod)
-        apply_glossy_purple_theme = _ui_mod.apply_glossy_purple_theme
-        render_page_banner = _ui_mod.render_page_banner
-        render_gloss_card = _ui_mod.render_gloss_card
-        render_medical_disclaimer = _ui_mod.render_medical_disclaimer
-        _ui_loaded = True
-        break
+    if os.path.isfile(_ui_path):
+        try:
+            _spec = importlib.util.spec_from_file_location("Ui", _ui_path)
+            if _spec is None or _spec.loader is None:
+                raise ImportError("Unable to create UI module loader.")
+            _ui_mod = importlib.util.module_from_spec(_spec)
+            _spec.loader.exec_module(_ui_mod)
+            apply_glossy_purple_theme = _ui_mod.apply_glossy_purple_theme
+            render_page_banner = _ui_mod.render_page_banner
+            render_gloss_card = _ui_mod.render_gloss_card
+            render_medical_disclaimer = _ui_mod.render_medical_disclaimer
+            _ui_loaded = True
+            break
+        except Exception as e:
+            st.error(f"Error loading Ui.py: {e}")
+            st.stop()
 
 if not _ui_loaded:
     st.error(f"Could not find Ui.py in {ROOT_DIR}. Please ensure Ui.py is saved in the root aarogya-ai folder.")
@@ -116,10 +131,24 @@ with st.container(border=True):
 
 if uploaded_file is not None:
     try:
-        if uploaded_file.name.lower().endswith(".csv"):
+        file_name_lower = uploaded_file.name.lower()
+        if file_name_lower.endswith(".csv"):
             df = pd.read_csv(uploaded_file)
-        elif uploaded_file.name.lower().endswith(".json"):
-            df = pd.read_json(uploaded_file)
+        elif file_name_lower.endswith(".json"):
+            uploaded_file.seek(0)
+            try:
+                df = pd.read_json(uploaded_file)
+            except ValueError:
+                uploaded_file.seek(0)
+                raw_json = json.load(uploaded_file)
+                if isinstance(raw_json, list):
+                    df = pd.json_normalize(raw_json)
+                elif isinstance(raw_json, dict):
+                    df = pd.json_normalize([raw_json])
+                else:
+                    raise ValueError("Unsupported JSON structure.")
+        else:
+            raise ValueError("Only CSV and JSON files are supported.")
 
         st.success("✅ File uploaded successfully!")
 

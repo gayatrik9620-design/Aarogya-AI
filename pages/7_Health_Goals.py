@@ -9,23 +9,38 @@ import streamlit as st
 # EXPLICIT ROOT PATH & Ui.py LOADER (pages/7_Health_Goals.py)
 # =========================================================
 
-ROOT_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
+_auto_root = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
+_local_root = r"C:\Users\nehab\aarogya-ai"
+
+if any(os.path.isfile(os.path.join(_auto_root, c)) for c in ("Ui.py", "ui.py")):
+    ROOT_DIR = _auto_root
+elif any(os.path.isfile(os.path.join(_local_root, c)) for c in ("Ui.py", "ui.py")):
+    ROOT_DIR = _local_root
+else:
+    ROOT_DIR = _auto_root
+
 if ROOT_DIR not in sys.path:
     sys.path.insert(0, ROOT_DIR)
 
 _ui_loaded = False
 for _candidate in ("Ui.py", "ui.py"):
     _ui_path = os.path.join(ROOT_DIR, _candidate)
-    if os.path.exists(_ui_path):
-        _spec = importlib.util.spec_from_file_location("Ui", _ui_path)
-        _ui_mod = importlib.util.module_from_spec(_spec)
-        _spec.loader.exec_module(_ui_mod)
-        apply_glossy_purple_theme = _ui_mod.apply_glossy_purple_theme
-        render_page_banner = _ui_mod.render_page_banner
-        render_gloss_card = _ui_mod.render_gloss_card
-        render_medical_disclaimer = _ui_mod.render_medical_disclaimer
-        _ui_loaded = True
-        break
+    if os.path.isfile(_ui_path):
+        try:
+            _spec = importlib.util.spec_from_file_location("Ui", _ui_path)
+            if _spec is None or _spec.loader is None:
+                raise ImportError("Unable to create UI module loader.")
+            _ui_mod = importlib.util.module_from_spec(_spec)
+            _spec.loader.exec_module(_ui_mod)
+            apply_glossy_purple_theme = _ui_mod.apply_glossy_purple_theme
+            render_page_banner = _ui_mod.render_page_banner
+            render_gloss_card = _ui_mod.render_gloss_card
+            render_medical_disclaimer = _ui_mod.render_medical_disclaimer
+            _ui_loaded = True
+            break
+        except Exception as e:
+            st.error(f"Error loading Ui.py: {e}")
+            st.stop()
 
 if not _ui_loaded:
     st.error(f"Could not find Ui.py in {ROOT_DIR}. Please ensure Ui.py is saved in the root aarogya-ai folder.")
@@ -147,21 +162,37 @@ render_page_banner(
 # DATABASE
 # =========================================================
 
+DB_PATH = os.path.join(ROOT_DIR, "health_data.db")
+
+
 @st.cache_data(ttl=60)
-def _load_goals_data():
+def _load_goals_data(db_path: str):
+    conn = None
     try:
-        conn = sqlite3.connect("health_data.db")
-        df = pd.read_sql_query(
+        conn = sqlite3.connect(db_path)
+        conn.execute("""
+        CREATE TABLE IF NOT EXISTS health_data (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            date TEXT,
+            weight REAL,
+            steps INTEGER,
+            sleep REAL
+        )
+        """)
+        conn.commit()
+        loaded_df = pd.read_sql_query(
             "SELECT date, weight, steps, sleep FROM health_data ORDER BY date ASC",
             conn
         )
-        conn.close()
-        return df
+        return loaded_df
     except Exception:
         return pd.DataFrame()
+    finally:
+        if conn is not None:
+            conn.close()
 
 
-df = _load_goals_data()
+df = _load_goals_data(DB_PATH)
 
 
 # =========================================================
@@ -214,7 +245,11 @@ if df.empty:
 # DATA PREP
 # =========================================================
 
+df = df.copy()
 df["date"] = pd.to_datetime(df["date"], errors="coerce")
+for col, default_val in (("weight", 0.0), ("steps", 0), ("sleep", 0.0)):
+    df[col] = pd.to_numeric(df[col], errors="coerce").fillna(default_val)
+
 df = df.dropna(subset=["date"])
 
 if df.empty:
@@ -229,8 +264,8 @@ current_steps = float(latest["steps"])
 current_sleep = float(latest["sleep"])
 current_weight = float(latest["weight"])
 
-steps_progress = min(current_steps / steps_goal, 1.0)
-sleep_progress = min(current_sleep / sleep_goal, 1.0)
+steps_progress = min(current_steps / max(float(steps_goal), 1.0), 1.0)
+sleep_progress = min(current_sleep / max(float(sleep_goal), 0.1), 1.0)
 steps_pct = min(int(steps_progress * 100), 100)
 sleep_pct = min(int(sleep_progress * 100), 100)
 

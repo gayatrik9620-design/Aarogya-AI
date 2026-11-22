@@ -6,7 +6,8 @@ import streamlit as st
 # AAROGYA-AI GLOSSY PURPLE DASHBOARD (pages/home.py)
 # =========================================================
 
-st.markdown("""
+st.markdown(
+    """
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
 
@@ -324,71 +325,72 @@ st.markdown("""
     box-shadow: 0 8px 18px rgba(109, 40, 217, 0.08);
 }
 </style>
-""", unsafe_allow_html=True)
+""",
+    unsafe_allow_html=True,
+)
 
 
 # =========================================================
 # DATABASE
 # =========================================================
 
+BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+
+
 @st.cache_data(ttl=30)
 def get_health_data():
-    data = {
-        "weight": None,
-        "steps": None,
-        "sleep": None
-    }
+  data = {"weight": None, "steps": None, "sleep": None}
 
-    db_path = "health_data.db"
-    if not os.path.exists(db_path):
-        return data
+  db_path = os.path.join(BASE_DIR, "health_data.db")
+  if not os.path.exists(db_path):
+    return data
 
-    try:
-        conn = sqlite3.connect(db_path)
-        cursor = conn.cursor()
+  try:
+    conn = sqlite3.connect(db_path)
+    cursor = conn.cursor()
 
-        cursor.execute("""
+    cursor.execute("""
             SELECT name
             FROM sqlite_master
             WHERE type='table'
         """)
-        tables = [row[0] for row in cursor.fetchall()]
+    tables = [row[0] for row in cursor.fetchall()]
 
-        for table in tables:
-            try:
-                safe_table = table.replace('"', '""')
-                cursor.execute(f'PRAGMA table_info("{safe_table}")')
-                columns_info = cursor.fetchall()
-                columns = [str(column[1]).lower() for column in columns_info]
+    for table in tables:
+      try:
+        safe_table = table.replace('"', '""')
+        cursor.execute(f'PRAGMA table_info("{safe_table}")')
+        columns_info = cursor.fetchall()
+        columns = [str(column[1]).lower() for column in columns_info]
 
-                if not columns:
-                    continue
+        if not columns:
+          continue
 
-                cursor.execute(
-                    f'SELECT * FROM "{safe_table}" ORDER BY rowid DESC LIMIT 1'
-                )
-                row = cursor.fetchone()
+        cursor.execute(
+            f'SELECT * FROM "{safe_table}" ORDER BY rowid DESC LIMIT 1'
+        )
+        row = cursor.fetchone()
 
-                if row:
-                    for index, column in enumerate(columns):
-                        value = row[index]
-                        if value is None:
-                            continue
+        if row:
+          for index, column in enumerate(columns):
+            value = row[index]
+            if value is None:
+              continue
 
-                        if "weight" in column:
-                            data["weight"] = value
-                        elif "step" in column:
-                            data["steps"] = value
-                        elif "sleep" in column or "rest" in column:
-                            data["sleep"] = value
-            except Exception:
-                continue
+            if "weight" in column:
+              data["weight"] = value
+            elif "step" in column:
+              data["steps"] = value
+            elif "sleep" in column or "rest" in column:
+              data["sleep"] = value
+      except Exception:
+        continue
 
-        conn.close()
-    except Exception:
-        pass
+    conn.close()
+  except Exception:
+    pass
 
-    return data
+  return data
 
 
 health = get_health_data()
@@ -398,7 +400,8 @@ health = get_health_data()
 # HERO
 # =========================================================
 
-st.markdown("""
+st.markdown(
+    """
 <div class="purple-hero anim-1">
     <div class="purple-pill">
         <span class="violet-dot"></span>
@@ -411,154 +414,210 @@ st.markdown("""
         and interact with your AI-powered health assistant — all from one place.
     </p>
 </div>
-""", unsafe_allow_html=True)
+""",
+    unsafe_allow_html=True,
+)
 
 
 # =========================================================
 # HEALTH OVERVIEW
 # =========================================================
 
-st.markdown('<div class="purple-section anim-1">🫀 Health Overview</div>', unsafe_allow_html=True)
+st.markdown(
+    '<div class="purple-section anim-1">🫀 Health Overview</div>',
+    unsafe_allow_html=True,
+)
 
-weight_display = f"{health['weight']} kg" if health["weight"] is not None else "No data"
-steps_display = f"{health['steps']:,}" if health["steps"] is not None else "No data"
-sleep_display = f"{health['sleep']} hrs" if health["sleep"] is not None else "No data"
+weight_display = (
+    f"{health['weight']} kg" if health["weight"] is not None else "No data"
+)
+steps_display = (
+    f"{health['steps']:,}" if health["steps"] is not None else "No data"
+)
+sleep_display = (
+    f"{health['sleep']} hrs" if health["sleep"] is not None else "No data"
+)
 
 c1, c2, c3 = st.columns(3)
 
 with c1:
-    st.markdown(f"""
+  st.markdown(
+      f"""
     <div class="gloss-purple-kpi anim-2">
         <div class="gloss-kpi-label">⚖️ Body Mass / Weight</div>
         <div class="gloss-kpi-value">{weight_display}</div>
         <div class="gloss-kpi-accent">Latest recorded measurement</div>
     </div>
-    """, unsafe_allow_html=True)
+    """,
+      unsafe_allow_html=True,
+  )
 
 with c2:
-    st.markdown(f"""
+  st.markdown(
+      f"""
     <div class="gloss-purple-kpi anim-3">
         <div class="gloss-kpi-label">🩺 Daily Activity Steps</div>
         <div class="gloss-kpi-value">{steps_display}</div>
         <div class="gloss-kpi-accent">Active movement log</div>
     </div>
-    """, unsafe_allow_html=True)
+    """,
+      unsafe_allow_html=True,
+  )
 
 with c3:
-    st.markdown(f"""
+  st.markdown(
+      f"""
     <div class="gloss-purple-kpi anim-4">
         <div class="gloss-kpi-label">💤 Recovery Sleep</div>
         <div class="gloss-kpi-value">{sleep_display}</div>
         <div class="gloss-kpi-accent">Recent rest duration</div>
     </div>
-    """, unsafe_allow_html=True)
+    """,
+      unsafe_allow_html=True,
+  )
 
 
 # =========================================================
 # QUICK ACCESS
 # =========================================================
 
-st.markdown('<div class="purple-section anim-1">🩺 Quick Access Modules</div>', unsafe_allow_html=True)
+st.markdown(
+    '<div class="purple-section anim-1">🩺 Quick Access Modules</div>',
+    unsafe_allow_html=True,
+)
 
 q1, q2, q3, q4 = st.columns(4)
 
 with q1:
-    st.markdown("""
+  st.markdown(
+      """
     <div class="gloss-purple-qa anim-2">
         <div class="med-icon-box med-float">🩺</div>
         <div class="gloss-qa-title">AI Assistant</div>
         <p class="gloss-qa-desc">Get general wellness guidance from your AI assistant.</p>
     </div>
-    """, unsafe_allow_html=True)
+    """,
+      unsafe_allow_html=True,
+  )
 
 with q2:
-    st.markdown("""
+  st.markdown(
+      """
     <div class="gloss-purple-qa anim-3">
         <div class="med-icon-box med-float">🫀</div>
         <div class="gloss-qa-title">Health Data</div>
         <p class="gloss-qa-desc">Record and review your health measurements.</p>
     </div>
-    """, unsafe_allow_html=True)
+    """,
+      unsafe_allow_html=True,
+  )
 
 with q3:
-    st.markdown("""
+  st.markdown(
+      """
     <div class="gloss-purple-qa anim-4">
         <div class="med-icon-box med-float">🧬</div>
         <div class="gloss-qa-title">Analysis</div>
         <p class="gloss-qa-desc">Explore your health trends and insights.</p>
     </div>
-    """, unsafe_allow_html=True)
+    """,
+      unsafe_allow_html=True,
+  )
 
 with q4:
-    st.markdown("""
+  st.markdown(
+      """
     <div class="gloss-purple-qa anim-4">
         <div class="med-icon-box med-float">💊</div>
         <div class="gloss-qa-title">Health Goals</div>
         <p class="gloss-qa-desc">Track your wellness objectives and progress.</p>
     </div>
-    """, unsafe_allow_html=True)
+    """,
+      unsafe_allow_html=True,
+  )
 
 
 # =========================================================
 # WELLNESS INSIGHTS
 # =========================================================
 
-st.markdown('<div class="purple-section anim-1">🧬 Wellness Insights</div>', unsafe_allow_html=True)
+st.markdown(
+    '<div class="purple-section anim-1">🧬 Wellness Insights</div>',
+    unsafe_allow_html=True,
+)
 
 i1, i2, i3 = st.columns(3)
 
 with i1:
-    st.markdown("""
+  st.markdown(
+      """
     <div class="gloss-purple-insight anim-2">
         <div class="gloss-insight-title">🩺 Activity Overview</div>
         <p class="gloss-insight-body">
             Keep your daily activity records updated to understand your wellness patterns over time.
         </p>
     </div>
-    """, unsafe_allow_html=True)
+    """,
+      unsafe_allow_html=True,
+  )
 
 with i2:
-    st.markdown("""
+  st.markdown(
+      """
     <div class="gloss-purple-insight anim-3">
         <div class="gloss-insight-title">💤 Sleep Tracking</div>
         <p class="gloss-insight-body">
             Regular sleep tracking helps you observe changes in your personal wellness routine.
         </p>
     </div>
-    """, unsafe_allow_html=True)
+    """,
+      unsafe_allow_html=True,
+  )
 
 with i3:
-    st.markdown("""
+  st.markdown(
+      """
     <div class="gloss-purple-insight anim-4">
         <div class="gloss-insight-title">📋 Tracking Status</div>
         <p class="gloss-insight-body">
             Your health tracking data is being monitored through the available health records.
         </p>
     </div>
-    """, unsafe_allow_html=True)
+    """,
+      unsafe_allow_html=True,
+  )
 
 
 # =========================================================
 # AI FEATURE
 # =========================================================
 
-st.markdown('<div class="purple-section anim-1">🧬 Aarogya-AI Intelligence</div>', unsafe_allow_html=True)
+st.markdown(
+    '<div class="purple-section anim-1">🧬 Aarogya-AI Intelligence</div>',
+    unsafe_allow_html=True,
+)
 
-st.markdown("""
+st.markdown(
+    """
 <div class="gloss-purple-ai anim-2">
     <strong>✨ Smarter wellness, powered by AI.</strong><br>
     Aarogya-AI combines health tracking, wellness insights, AI assistance and safety-focused features in one platform.
 </div>
-""", unsafe_allow_html=True)
+""",
+    unsafe_allow_html=True,
+)
 
 
 # =========================================================
 # SAFETY NOTICE
 # =========================================================
 
-st.markdown("""
+st.markdown(
+    """
 <div class="gloss-purple-safety anim-3">
     <strong>🛡️ Safety Notice:</strong> Aarogya-AI provides general wellness information and educational support.
     It does not replace professional medical advice, diagnosis or treatment.
 </div>
-""", unsafe_allow_html=True)
+""",
+    unsafe_allow_html=True,
+)

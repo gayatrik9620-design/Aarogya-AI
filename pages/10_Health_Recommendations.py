@@ -2,6 +2,7 @@ import os
 import sys
 import sqlite3
 import importlib.util
+from pathlib import Path
 import pandas as pd
 import streamlit as st
 
@@ -9,23 +10,38 @@ import streamlit as st
 # EXPLICIT ROOT PATH & Ui.py LOADER (pages/10_Health_Recommendations.py)
 # =========================================================
 
-ROOT_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
-if ROOT_DIR not in sys.path:
-    sys.path.insert(0, ROOT_DIR)
+_auto_root = Path(__file__).resolve().parents[1]
+_local_root = Path(r"C:\Users\nehab\aarogya-ai")
+
+if (_auto_root / "Ui.py").is_file() or (_auto_root / "ui.py").is_file():
+    ROOT_DIR = _auto_root
+elif (_local_root / "Ui.py").is_file() or (_local_root / "ui.py").is_file():
+    ROOT_DIR = _local_root
+else:
+    ROOT_DIR = _auto_root
+
+if str(ROOT_DIR) not in sys.path:
+    sys.path.insert(0, str(ROOT_DIR))
 
 _ui_loaded = False
 for _candidate in ("Ui.py", "ui.py"):
-    _ui_path = os.path.join(ROOT_DIR, _candidate)
-    if os.path.exists(_ui_path):
-        _spec = importlib.util.spec_from_file_location("Ui", _ui_path)
-        _ui_mod = importlib.util.module_from_spec(_spec)
-        _spec.loader.exec_module(_ui_mod)
-        apply_glossy_purple_theme = _ui_mod.apply_glossy_purple_theme
-        render_page_banner = _ui_mod.render_page_banner
-        render_gloss_card = _ui_mod.render_gloss_card
-        render_medical_disclaimer = _ui_mod.render_medical_disclaimer
-        _ui_loaded = True
-        break
+    _ui_path = ROOT_DIR / _candidate
+    if _ui_path.is_file():
+        try:
+            _spec = importlib.util.spec_from_file_location("Ui", str(_ui_path))
+            if _spec is None or _spec.loader is None:
+                raise ImportError("Unable to create UI module loader.")
+            _ui_mod = importlib.util.module_from_spec(_spec)
+            _spec.loader.exec_module(_ui_mod)
+            apply_glossy_purple_theme = _ui_mod.apply_glossy_purple_theme
+            render_page_banner = _ui_mod.render_page_banner
+            render_gloss_card = _ui_mod.render_gloss_card
+            render_medical_disclaimer = _ui_mod.render_medical_disclaimer
+            _ui_loaded = True
+            break
+        except Exception as e:
+            st.error(f"Error loading Ui.py: {e}")
+            st.stop()
 
 if not _ui_loaded:
     st.error(f"Could not find Ui.py in {ROOT_DIR}. Please ensure Ui.py is saved in the root aarogya-ai folder.")
@@ -135,21 +151,37 @@ render_page_banner(
 # DATABASE
 # =========================================================
 
+DB_PATH = str(ROOT_DIR / "health_data.db")
+
+
 @st.cache_data(ttl=60)
-def _load_rec_data():
+def _load_rec_data(db_path: str):
+    conn = None
     try:
-        conn = sqlite3.connect("health_data.db")
-        df = pd.read_sql_query(
-            "SELECT date, weight, steps, sleep FROM health_data ORDER BY date DESC",
+        conn = sqlite3.connect(db_path)
+        conn.execute("""
+        CREATE TABLE IF NOT EXISTS health_data (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            date TEXT,
+            weight REAL,
+            steps INTEGER,
+            sleep REAL
+        )
+        """)
+        conn.commit()
+        loaded_df = pd.read_sql_query(
+            "SELECT date, weight, steps, sleep FROM health_data ORDER BY date DESC, id DESC",
             conn
         )
-        conn.close()
-        return df
+        return loaded_df
     except Exception:
         return pd.DataFrame()
+    finally:
+        if conn is not None:
+            conn.close()
 
 
-df = _load_rec_data()
+df = _load_rec_data(DB_PATH)
 
 
 # =========================================================
@@ -157,9 +189,22 @@ df = _load_rec_data()
 # =========================================================
 
 if not df.empty:
-    latest = df.iloc[0]
-    steps_val = latest["steps"]
-    sleep_val = latest["sleep"]
+    clean_df = df.copy()
+    clean_df["parsed_date"] = pd.to_datetime(clean_df["date"], errors="coerce")
+    for col, default_val in (("weight", 0.0), ("steps", 0), ("sleep", 0.0)):
+        if col not in clean_df.columns:
+            clean_df[col] = default_val
+        clean_df[col] = pd.to_numeric(clean_df[col], errors="coerce").fillna(default_val)
+
+    clean_df = clean_df.sort_values(
+        by=["parsed_date"],
+        ascending=False,
+        na_position="last"
+    ).reset_index(drop=True)
+
+    latest = clean_df.iloc[0]
+    steps_val = float(latest["steps"])
+    sleep_val = float(latest["sleep"])
 
     if steps_val < 3000:
         activity_msg = "Your recorded activity is low. Try adding short walks throughout your day."

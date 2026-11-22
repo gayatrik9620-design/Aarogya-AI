@@ -1,29 +1,46 @@
 import os
 import sys
+import html
 import importlib.util
+from pathlib import Path
 import streamlit as st
 
 # =========================================================
 # EXPLICIT ROOT PATH & Ui.py LOADER (pages/9_Symptom_Information.py)
 # =========================================================
 
-ROOT_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
-if ROOT_DIR not in sys.path:
-    sys.path.insert(0, ROOT_DIR)
+_auto_root = Path(__file__).resolve().parents[1]
+_local_root = Path(r"C:\Users\nehab\aarogya-ai")
+
+if (_auto_root / "Ui.py").is_file() or (_auto_root / "ui.py").is_file():
+    ROOT_DIR = _auto_root
+elif (_local_root / "Ui.py").is_file() or (_local_root / "ui.py").is_file():
+    ROOT_DIR = _local_root
+else:
+    ROOT_DIR = _auto_root
+
+if str(ROOT_DIR) not in sys.path:
+    sys.path.insert(0, str(ROOT_DIR))
 
 _ui_loaded = False
 for _candidate in ("Ui.py", "ui.py"):
-    _ui_path = os.path.join(ROOT_DIR, _candidate)
-    if os.path.exists(_ui_path):
-        _spec = importlib.util.spec_from_file_location("Ui", _ui_path)
-        _ui_mod = importlib.util.module_from_spec(_spec)
-        _spec.loader.exec_module(_ui_mod)
-        apply_glossy_purple_theme = _ui_mod.apply_glossy_purple_theme
-        render_page_banner = _ui_mod.render_page_banner
-        render_gloss_card = _ui_mod.render_gloss_card
-        render_medical_disclaimer = _ui_mod.render_medical_disclaimer
-        _ui_loaded = True
-        break
+    _ui_path = ROOT_DIR / _candidate
+    if _ui_path.is_file():
+        try:
+            _spec = importlib.util.spec_from_file_location("Ui", str(_ui_path))
+            if _spec is None or _spec.loader is None:
+                raise ImportError("Unable to create UI module loader.")
+            _ui_mod = importlib.util.module_from_spec(_spec)
+            _spec.loader.exec_module(_ui_mod)
+            apply_glossy_purple_theme = _ui_mod.apply_glossy_purple_theme
+            render_page_banner = _ui_mod.render_page_banner
+            render_gloss_card = _ui_mod.render_gloss_card
+            render_medical_disclaimer = _ui_mod.render_medical_disclaimer
+            _ui_loaded = True
+            break
+        except Exception as e:
+            st.error(f"Error loading Ui.py: {e}")
+            st.stop()
 
 if not _ui_loaded:
     st.error(f"Could not find Ui.py in {ROOT_DIR}. Please ensure Ui.py is saved in the root aarogya-ai folder.")
@@ -233,15 +250,21 @@ with st.container(border=True):
 if "show_symptom" in st.session_state and st.session_state["show_symptom"] in symptoms:
     sel = st.session_state["show_symptom"]
     data = symptoms[sel]
-    tips_html = "".join(f'<div class="gloss-tip-pill"><span>🩺</span><span>{tip}</span></div>' for tip in data["tips"])
+    safe_title = html.escape(sel.split(" ", 1)[-1])
+    safe_info = html.escape(data["info"])
+    safe_seek_help = html.escape(data["seek_help"])
+    tips_html = "".join(
+        f'<div class="gloss-tip-pill"><span>🩺</span><span>{html.escape(tip)}</span></div>'
+        for tip in data["tips"]
+    )
 
     st.markdown(f"""
     <div class="gloss-symptom-panel anim-2">
         <div class="gloss-symptom-title">
             <span class="med-float">{data['emoji']}</span>
-            <span>{sel.split(' ', 1)[-1]}</span>
+            <span>{safe_title}</span>
         </div>
-        <div class="gloss-symptom-desc">{data['info']}</div>
+        <div class="gloss-symptom-desc">{safe_info}</div>
         <div style="font-size:15px;font-weight:800;color:#2E1065;margin-bottom:8px;">
             💊 General Wellness Tips
         </div>
@@ -250,7 +273,7 @@ if "show_symptom" in st.session_state and st.session_state["show_symptom"] in sy
         </div>
         <div class="gloss-seek-box">
             <strong>🩺 When to Seek Professional Help:</strong><br>
-            {data['seek_help']}
+            {safe_seek_help}
         </div>
         <div class="gloss-emergency-box">
             <strong>🚨 Emergency Reminder:</strong>

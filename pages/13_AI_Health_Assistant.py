@@ -1,37 +1,80 @@
 import os
 import sys
 import importlib.util
+from pathlib import Path
 import streamlit as st
 
 # =========================================================
-# EXPLICIT ROOT PATH & Ui.py LOADER (pages/2_chatbot.py)
+# PROJECT ROOT DETECTION & UI LOADER
 # =========================================================
 
-ROOT_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
+CURRENT_FILE = Path(__file__).resolve()
+
+ROOT_DIR = None
+
+# Find the folder containing Ui.py
+for parent in CURRENT_FILE.parents:
+    if (parent / "Ui.py").is_file():
+        ROOT_DIR = parent
+        break
+    if (parent / "ui.py").is_file():
+        ROOT_DIR = parent
+        break
+
+if ROOT_DIR is None:
+    st.error(
+        "Could not locate Ui.py. "
+        f"Current file location: {CURRENT_FILE}"
+    )
+    st.stop()
+
+ROOT_DIR = str(ROOT_DIR)
+
 if ROOT_DIR not in sys.path:
     sys.path.insert(0, ROOT_DIR)
 
-_ui_loaded = False
-for _candidate in ("Ui.py", "ui.py"):
-    _ui_path = os.path.join(ROOT_DIR, _candidate)
-    if os.path.exists(_ui_path):
-        _spec = importlib.util.spec_from_file_location("Ui", _ui_path)
-        _ui_mod = importlib.util.module_from_spec(_spec)
-        _spec.loader.exec_module(_ui_mod)
-        apply_glossy_purple_theme = _ui_mod.apply_glossy_purple_theme
-        render_page_banner = _ui_mod.render_page_banner
-        render_gloss_card = _ui_mod.render_gloss_card
-        render_medical_disclaimer = _ui_mod.render_medical_disclaimer
-        _ui_loaded = True
+# Load UI module
+_ui_path = None
+
+for candidate in ("Ui.py", "ui.py"):
+    possible_path = os.path.join(ROOT_DIR, candidate)
+
+    if os.path.isfile(possible_path):
+        _ui_path = possible_path
         break
 
-if not _ui_loaded:
-    st.error(f"Could not find Ui.py in {ROOT_DIR}. Please ensure Ui.py is saved in the root aarogya-ai folder.")
+if _ui_path is None:
+    st.error(f"UI file not found in: {ROOT_DIR}")
+    st.stop()
+
+try:
+    _spec = importlib.util.spec_from_file_location(
+        "aarogya_ui", _ui_path
+    )
+
+    if _spec is None or _spec.loader is None:
+        raise ImportError("Could not create UI module loader.")
+
+    _ui_mod = importlib.util.module_from_spec(_spec)
+    _spec.loader.exec_module(_ui_mod)
+
+    apply_glossy_purple_theme = (
+        _ui_mod.apply_glossy_purple_theme
+    )
+    render_page_banner = _ui_mod.render_page_banner
+    render_gloss_card = _ui_mod.render_gloss_card
+    render_medical_disclaimer = (
+        _ui_mod.render_medical_disclaimer
+    )
+
+except Exception as e:
+    st.error(f"Error loading Ui.py: {e}")
     st.stop()
 
 from src.chatbot import get_chatbot_response
 
-# NOTE: st.set_page_config() is handled by app.py — NOT repeated here.
+# NOTE: Page configuration is handled by app.py.
+
 
 # =========================================================
 # GLOSSY PURPLE THEME & CHAT STYLES
@@ -74,6 +117,11 @@ st.markdown("""
 </style>
 """, unsafe_allow_html=True)
 
+
+# =========================================================
+# PAGE HEADER
+# =========================================================
+
 render_page_banner(
     symbol="🩺",
     title="Your AI Health Assistant",
@@ -100,21 +148,27 @@ render_gloss_card(
 
 st.markdown("""
 <div class="anim-2">
-    <span class="gloss-feat-pill"><span class="med-float">🩺</span> Natural Language</span>
-    <span class="gloss-feat-pill"><span class="med-float">🧬</span> AI-Powered Insights</span>
-    <span class="gloss-feat-pill"><span class="med-float">💊</span> Safety-First Design</span>
-    <span class="gloss-feat-pill"><span class="med-float">🫀</span> Health-Aware Context</span>
+    <span class="gloss-feat-pill">🩺 Natural Language</span>
+    <span class="gloss-feat-pill">🧬 AI-Powered Insights</span>
+    <span class="gloss-feat-pill">💊 Safety-First Design</span>
+    <span class="gloss-feat-pill">🫀 Health-Aware Context</span>
 </div>
 """, unsafe_allow_html=True)
 
-st.markdown('<div style="height:14px"></div>', unsafe_allow_html=True)
+st.markdown(
+    '<div style="height:14px"></div>',
+    unsafe_allow_html=True
+)
 
 
 # =========================================================
 # QUICK PROMPTS
 # =========================================================
 
-st.markdown('<div class="purple-chat-label anim-2">💡 Quick Prompts</div>', unsafe_allow_html=True)
+st.markdown(
+    '<div class="purple-chat-label anim-2">💡 Quick Prompts</div>',
+    unsafe_allow_html=True
+)
 
 qp_col1, qp_col2, qp_col3, qp_col4 = st.columns(4)
 
@@ -131,31 +185,35 @@ if "health_messages" not in st.session_state:
 prompt_clicked = None
 
 with qp_col1:
-    if st.button("💤  Sleep Tips", use_container_width=True):
+    if st.button("💤 Sleep Tips", use_container_width=True):
         prompt_clicked = quick_prompts[0]
 
 with qp_col2:
-    if st.button("🧬  Lifestyle Tips", use_container_width=True):
+    if st.button("🧬 Lifestyle Tips", use_container_width=True):
         prompt_clicked = quick_prompts[1]
 
 with qp_col3:
-    if st.button("💧  Hydration Tips", use_container_width=True):
+    if st.button("💧 Hydration Tips", use_container_width=True):
         prompt_clicked = quick_prompts[2]
 
 with qp_col4:
-    if st.button("🩺  Activity Tips", use_container_width=True):
+    if st.button("🩺 Activity Tips", use_container_width=True):
         prompt_clicked = quick_prompts[3]
 
-st.markdown('<div style="height:10px"></div>', unsafe_allow_html=True)
+st.markdown(
+    '<div style="height:10px"></div>',
+    unsafe_allow_html=True
+)
 
 
 # =========================================================
-# CLEAR BUTTON
+# CLEAR CHAT
 # =========================================================
 
 clear_col, _ = st.columns([1, 5])
+
 with clear_col:
-    if st.button("🗑️  Clear Chat", use_container_width=True):
+    if st.button("🗑️ Clear Chat", use_container_width=True):
         st.session_state.health_messages = []
         st.rerun()
 
@@ -165,9 +223,15 @@ with clear_col:
 # =========================================================
 
 with st.container(border=True):
+
     if not st.session_state.health_messages:
-        st.caption("Start a conversation below or click one of the quick wellness prompts above.")
+        st.caption(
+            "Start a conversation below or click one "
+            "of the quick wellness prompts above."
+        )
+
     for message in st.session_state.health_messages:
+
         with st.chat_message(
             message["role"],
             avatar="🩺" if message["role"] == "assistant" else "🧑"
@@ -179,7 +243,9 @@ with st.container(border=True):
 # USER INPUT
 # =========================================================
 
-user_query = st.chat_input("💬 Ask Aarogya-AI a health or wellness question…")
+user_query = st.chat_input(
+    "💬 Ask Aarogya-AI a health or wellness question..."
+)
 
 if prompt_clicked:
     user_query = prompt_clicked
@@ -190,6 +256,7 @@ if prompt_clicked:
 # =========================================================
 
 if user_query:
+
     st.session_state.health_messages.append({
         "role": "user",
         "content": user_query
@@ -199,16 +266,22 @@ if user_query:
         st.markdown(user_query)
 
     with st.chat_message("assistant", avatar="🩺"):
-        with st.spinner("🧬 Aarogya-AI is thinking…"):
+
+        with st.spinner("🧬 Aarogya-AI is thinking..."):
+
             try:
                 response = get_chatbot_response(user_query)
+
                 st.markdown(response)
-            except Exception:
+
+            except Exception as e:
                 response = (
                     "I'm unable to process your question right now. "
                     "Please check your API key configuration and try again."
                 )
+
                 st.error(response)
+                print(f"Chatbot error: {e}")
 
     st.session_state.health_messages.append({
         "role": "assistant",

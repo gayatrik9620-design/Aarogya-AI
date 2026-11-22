@@ -1,13 +1,10 @@
 import streamlit as st
 
-# =========================================================
-# AAROGYA-AI SHARED GLOSSY PURPLE UI MODULE (Ui.py)
-# =========================================================
-
 
 def apply_glossy_purple_theme():
-    """Applies glossy purple gradient styling, glassmorphism cards, and animations."""
-    st.markdown("""
+  """Applies glossy purple gradient styling, glassmorphism cards, and animations."""
+  st.markdown(
+      """
     <style>
     @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
 
@@ -232,12 +229,20 @@ def apply_glossy_purple_theme():
         box-shadow: 0 8px 18px rgba(109, 40, 217, 0.08);
     }
     </style>
-    """, unsafe_allow_html=True)
+    """,
+      unsafe_allow_html=True,
+  )
 
 
-def render_page_banner(symbol: str, title: str, subtitle: str, badge: str = "🧬 Aarogya-AI Wellness Suite"):
-    """Renders an animated glossy purple top banner with a medical symbol."""
-    st.markdown(f"""
+def render_page_banner(
+    symbol: str,
+    title: str,
+    subtitle: str,
+    badge: str = "🧬 Aarogya-AI Wellness Suite",
+):
+  """Renders an animated glossy purple top banner with a medical symbol."""
+  st.markdown(
+      f"""
     <div class="ui-purple-banner anim-1">
         <div class="ui-badge-pill">
             <span class="ui-pulse-dot"></span>
@@ -246,12 +251,17 @@ def render_page_banner(symbol: str, title: str, subtitle: str, badge: str = "�
         <div class="ui-banner-title"><span class="med-float">{symbol}</span> {title}</div>
         <p class="ui-banner-sub">{subtitle}</p>
     </div>
-    """, unsafe_allow_html=True)
+    """,
+      unsafe_allow_html=True,
+  )
 
 
-def render_gloss_card(title: str, body: str, symbol: str = "🩺", anim_class: str = "anim-2"):
-    """Renders a glossy purple card with a medical icon badge."""
-    st.markdown(f"""
+def render_gloss_card(
+    title: str, body: str, symbol: str = "🩺", anim_class: str = "anim-2"
+):
+  """Renders a glossy purple card with a medical icon badge."""
+  st.markdown(
+      f"""
     <div class="ui-gloss-card {anim_class}">
         <div class="ui-card-head">
             <span class="ui-icon-chip med-float">{symbol}</span>
@@ -259,14 +269,19 @@ def render_gloss_card(title: str, body: str, symbol: str = "🩺", anim_class: s
         </div>
         <p class="ui-card-body">{body}</p>
     </div>
-    """, unsafe_allow_html=True)
+    """,
+      unsafe_allow_html=True,
+  )
 
 
 def render_medical_disclaimer():
-    """Renders the standard medical safety footer across pages."""
-    st.markdown("""
+  """Renders the standard medical safety footer across pages."""
+  st.markdown(
+      """
     <div class="ui-purple-safety anim-3">
         <strong>🩺 Medical Safety Notice:</strong> Aarogya-AI provides general wellness information and educational support.
         It does not replace professional medical advice, diagnosis, or treatment.
     </div>
-    """, unsafe_allow_html=True)
+    """,
+      unsafe_allow_html=True,
+  )
