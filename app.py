@@ -31,11 +31,27 @@ st.markdown("""
     color: #1E293B;
 }
 
-/* ===== HIDE DEFAULT STREAMLIT DECORATION ===== */
+/* ===== HIDE DEFAULT STREAMLIT DECORATION (KEEP MOBILE SIDEBAR TOGGLE VISIBLE) ===== */
 #MainMenu { visibility: hidden; }
 footer { visibility: hidden; }
-header { visibility: hidden; }
 [data-testid="stDecoration"] { display: none; }
+
+header[data-testid="stHeader"] {
+    background: transparent !important;
+    pointer-events: none;
+}
+
+[data-testid="collapsedControl"],
+button[kind="header"] {
+    pointer-events: auto !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+    color: #6546B8 !important;
+    background: #FFFFFF !important;
+    border: 1px solid #EDE9FA !important;
+    border-radius: 10px !important;
+    box-shadow: 0 2px 10px rgba(101, 70, 184, 0.15) !important;
+}
 
 /* ===== MAIN CONTENT AREA ===== */
 .block-container {
@@ -347,6 +363,21 @@ div[data-testid="stSidebar"] .stRadio [data-checked="true"] div[data-testid="stM
     background: #EDE9FA;
     color: #6546B8;
     font-weight: 600;
+}
+
+/* ===== MOBILE RESPONSIVE ADJUSTMENTS ===== */
+@media (max-width: 768px) {
+    .block-container {
+        padding: 1.25rem 1rem 2.5rem 1rem !important;
+    }
+
+    .page-header {
+        padding: 22px 20px !important;
+    }
+
+    .page-header h1 {
+        font-size: 22px !important;
+    }
 }
 
 /* ===== ANIMATIONS ===== */
