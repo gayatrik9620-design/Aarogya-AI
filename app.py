@@ -441,35 +441,39 @@ with st.sidebar:
 # PAGE ROUTER
 # --------------------------------------------------
 
-# Clean the page key
+def run_page(path):
+    with open(path, encoding="utf-8") as f:
+        exec(f.read(), globals())
+
+
 page_key = page.strip()
 
 if page_key.startswith("🏠"):
-    exec(open("pages/home.py", encoding="utf-8").read())
+    run_page("pages/home.py")
 
 elif page_key.startswith("🤖"):
-    exec(open("pages/13_AI_Health_Assistant.py", encoding="utf-8").read())
+    run_page("pages/13_AI_Health_Assistant.py")
 
 elif page_key.startswith("❤️"):
-    exec(open("pages/3_Health_Data.py", encoding="utf-8").read())
+    run_page("pages/3_Health_Data.py")
 
 elif page_key.startswith("📊"):
-    exec(open("pages/4_Health_Analysis.py", encoding="utf-8").read())
+    run_page("pages/4_Health_Analysis.py")
 
 elif page_key.startswith("📄"):
-    exec(open("pages/5_Health_Report.py", encoding="utf-8").read())
+    run_page("pages/5_Health_Report.py")
 
 elif page_key.startswith("🎯"):
-    exec(open("pages/7_Health_Goals.py", encoding="utf-8").read())
+    run_page("pages/7_Health_Goals.py")
 
 elif page_key.startswith("💡"):
-    exec(open("pages/10_Health_Recommendations.py", encoding="utf-8").read())
+    run_page("pages/10_Health_Recommendations.py")
 
-elif page_key.startswith("🩺  Symptom"):
-    exec(open("pages/9_Symptom_Information.py", encoding="utf-8").read())
+elif page_key.startswith("🩺"):
+    run_page("pages/9_Symptom_Information.py")
 
 elif page_key.startswith("🛡️"):
-    exec(open("pages/11_Medication _Safety.py", encoding="utf-8").read())
+    run_page("pages/11_Medication _Safety.py")
 
 elif page_key.startswith("🚨"):
-    exec(open("pages/12_Emergency_Detection.py", encoding="utf-8").read())
+    run_page("pages/12_Emergency_Detection.py")

@@ -1,106 +1,69 @@
-import os
-from dotenv import load_dotenv
-
-from langchain_google_genai import ChatGoogleGenerativeAI
-from langchain_core.prompts import PromptTemplate
-from langchain_core.output_parsers import StrOutputParser
-
-from src.fitness_tool import get_fitness_summary
-from src.medication_tool import check_medication_interaction
-
-load_dotenv()
-
-
-SAFETY_SYSTEM_PROMPT = """You are Aarogya AI, a helpful, empathetic, and safe personal healthcare assistant.
-
-CRITICAL SAFETY RULES:
-
-1. Provide ONLY general informational and wellness guidance.
-2. NEVER provide a definitive medical diagnosis.
-3. NEVER prescribe, suggest, or recommend specific medicines, treatments, or dosages.
-4. For serious or persistent symptoms, advise the user to consult a qualified healthcare professional.
-5. EMERGENCY RULE:
-If the user mentions chest pain, severe shortness of breath, sudden numbness,
-uncontrolled bleeding, thoughts of self-harm, or suicide, immediately start your
-response with a prominent emergency warning and advise urgent medical care
-or calling India emergency services 112 or 108.
-6. Always end your response with:
-
-Disclaimer: I am an AI assistant, not a doctor. Please consult a medical professional for advice.
-
-User Query: {user_query}
-
-Response:
+"""
+Aarogya-AI Medication Awareness Tool (Week 3)
+General medication safety information — NOT prescriptions or diagnoses.
 """
 
+from typing import List
 
-def get_chatbot_response(user_query: str) -> str:
+MED_INFO = {
+    "aspirin": "Common pain reliever and anti-inflammatory. Not recommended for children under 12. May irritate the stomach.",
+    "ibuprofen": "NSAID (e.g., Brufen). Take with food. Avoid in kidney disease or with blood thinners.",
+    "paracetamol": "Used for pain and fever (Crocin, Dolo). Do not exceed recommended dose. Liver damage risk with overdose.",
+    "metformin": "Used for type 2 diabetes. Requires prescription. Take with meals to reduce GI side effects.",
+    "omeprazole": "Proton pump inhibitor for acidity/GERD. Take before meals. Long-term use needs monitoring.",
+    "amoxicillin": "Penicillin antibiotic. Complete the full prescribed course. Inform doctor of penicillin allergy.",
+    "amlodipine": "Calcium channel blocker for blood pressure. Do not stop suddenly without medical advice.",
+    "atorvastatin": "Statin for cholesterol. Report muscle pain to your doctor immediately.",
+    "cetirizine": "Antihistamine for allergies. May cause drowsiness. Avoid alcohol.",
+    "azithromycin": "Macrolide antibiotic. Requires prescription. Complete the full course.",
+}
 
-    # Fitness Summary Tool
-    fitness_keywords = [
-        "fitness summary",
-        "health summary",
-        "my fitness",
-        "my health data",
-        "steps",
-        "sleep",
-        "weight"
+KNOWN_INTERACTIONS = [
+    ({"aspirin", "ibuprofen"}, "Both are NSAIDs — combining may increase risk of GI bleeding."),
+    ({"aspirin", "warfarin"}, "May significantly increase bleeding risk. Medical supervision required."),
+    ({"metformin", "alcohol"}, "Alcohol with metformin may increase risk of lactic acidosis."),
+    ({"cetirizine", "alcohol"}, "Alcohol may intensify drowsiness from cetirizine."),
+    ({"amlodipine", "grapefruit"}, "Grapefruit may increase amlodipine blood levels."),
+]
+
+
+def check_medication_interaction(medications: List[str]) -> str:
+    meds_clean = [m.strip().lower() for m in medications if m.strip()]
+    meds_set = set(meds_clean)
+
+    if not meds_clean:
+        return "Please provide at least one medication name."
+
+    lines = [
+        "💊 **Medication Safety Information**",
+        f"\nChecking: {', '.join(meds_clean)}", "",
+        "---", "**General Awareness Notes:**",
     ]
 
-    if any(keyword in user_query.lower() for keyword in fitness_keywords):
-        try:
-            return get_fitness_summary()
-        except Exception as e:
-            return f"Unable to generate fitness summary: {str(e)}"
+    for med in meds_clean:
+        info = MED_INFO.get(med)
+        if info:
+            lines.append(f"\n• **{med.title()}:** {info}")
+        else:
+            lines.append(f"\n• **{med.title()}:** No specific info available. Consult your pharmacist or doctor.")
 
-    # Medication Interaction Tool
-    medication_keywords = [
-        "medication interaction",
-        "medicine interaction",
-        "drug interaction",
-        "check medicines",
-        "check medication"
+    found = [note for combo, note in KNOWN_INTERACTIONS if combo.issubset(meds_set)]
+
+    lines += ["", "---"]
+    if found:
+        lines.append("⚠️ **Potential Interaction Awareness:**")
+        lines += [f"• {n}" for n in found]
+    else:
+        lines += [
+            "No common interactions found in our database for these medications.",
+            "This does not mean no interactions exist — always consult your doctor or pharmacist.",
+        ]
+
+    lines += [
+        "", "---",
+        "🛡️ **Important:** This information is for general awareness only.",
+        "Never start, stop, or change medications without consulting a qualified healthcare professional.",
+        "",
+        "*Disclaimer: I am an AI assistant, not a doctor. Please consult a medical professional for advice.*"
     ]
-
-    if any(keyword in user_query.lower() for keyword in medication_keywords):
-
-        # Example:
-        # "Check medication interaction: aspirin, ibuprofen"
-        text = user_query.split(":", 1)
-
-        if len(text) == 2:
-            medications = text[1].split(",")
-            return check_medication_interaction(medications)
-
-        return (
-            "Please enter the medication names separated by commas.\n\n"
-            "Example: Check medication interaction: aspirin, ibuprofen"
-        )
-
-    # Gemini AI response
-    api_key = os.getenv("GOOGLE_API_KEY")
-
-    if not api_key:
-        return "⚠️ Error: GOOGLE_API_KEY missing in .env"
-
-    try:
-
-        llm = ChatGoogleGenerativeAI(
-            model="gemini-3.8-flash",
-            google_api_key=api_key,
-            temperature=0.3
-        )
-
-        prompt = PromptTemplate(
-            input_variables=["user_query"],
-            template=SAFETY_SYSTEM_PROMPT
-        )
-
-        chain = prompt | llm | StrOutputParser()
-
-        return chain.invoke({
-            "user_query": user_query
-        })
-
-    except Exception as e:
-        return f"⚠️ Error: {str(e)}"
+    return "\n".join(lines)

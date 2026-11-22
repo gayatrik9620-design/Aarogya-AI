@@ -1,61 +1,164 @@
+import os
+import sys
+import importlib.util
 import streamlit as st
 
-st.set_page_config(
-    page_title="Health Risk Assessment",
-    page_icon="⚠️",
-    layout="wide"
+# =========================================================
+# EXPLICIT ROOT PATH & Ui.py LOADER (pages/8_Risk_Assesment.py)
+# =========================================================
+
+ROOT_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
+if ROOT_DIR not in sys.path:
+    sys.path.insert(0, ROOT_DIR)
+
+_ui_loaded = False
+for _candidate in ("Ui.py", "ui.py"):
+    _ui_path = os.path.join(ROOT_DIR, _candidate)
+    if os.path.exists(_ui_path):
+        _spec = importlib.util.spec_from_file_location("Ui", _ui_path)
+        _ui_mod = importlib.util.module_from_spec(_spec)
+        _spec.loader.exec_module(_ui_mod)
+        apply_glossy_purple_theme = _ui_mod.apply_glossy_purple_theme
+        render_page_banner = _ui_mod.render_page_banner
+        render_gloss_card = _ui_mod.render_gloss_card
+        render_medical_disclaimer = _ui_mod.render_medical_disclaimer
+        _ui_loaded = True
+        break
+
+if not _ui_loaded:
+    st.error(f"Could not find Ui.py in {ROOT_DIR}. Please ensure Ui.py is saved in the root aarogya-ai folder.")
+    st.stop()
+
+# NOTE: st.set_page_config() is handled by app.py — NOT repeated here.
+
+# =========================================================
+# GLOSSY PURPLE THEME & PAGE STYLES
+# =========================================================
+
+apply_glossy_purple_theme()
+
+st.markdown("""
+<style>
+.purple-risk-head {
+    font-size: 20px;
+    font-weight: 800;
+    color: #2E1065;
+    letter-spacing: -0.3px;
+    margin: 22px 0 12px 0;
+}
+
+.gloss-risk-banner {
+    position: relative;
+    overflow: hidden;
+    border-radius: 22px;
+    padding: 22px 26px;
+    margin: 12px 0 18px 0;
+    background: linear-gradient(155deg, rgba(255, 255, 255, 0.96) 0%, rgba(243, 232, 255, 0.82) 100%);
+    backdrop-filter: blur(14px);
+    -webkit-backdrop-filter: blur(14px);
+    border: 1px solid rgba(216, 180, 254, 0.85);
+    border-left: 6px solid #7E22CE;
+    box-shadow:
+        0 12px 28px rgba(109, 40, 217, 0.10),
+        inset 0 1px 0 rgba(255, 255, 255, 0.98);
+    color: #1E1035;
+}
+
+.gloss-risk-tier {
+    font-size: 20px;
+    font-weight: 800;
+    color: #2E1065;
+    margin-bottom: 6px;
+}
+
+.gloss-risk-desc {
+    font-size: 14px;
+    line-height: 1.6;
+    color: #3B0764;
+    margin: 0;
+}
+
+.gloss-warning-item {
+    border-radius: 16px;
+    padding: 13px 18px;
+    margin: 8px 0;
+    background: linear-gradient(155deg, rgba(255, 255, 255, 0.94) 0%, rgba(243, 232, 255, 0.78) 100%);
+    border: 1px solid rgba(216, 180, 254, 0.78);
+    border-left: 4px solid #6D28D9;
+    color: #2E1065;
+    font-size: 14px;
+    font-weight: 600;
+}
+</style>
+""", unsafe_allow_html=True)
+
+render_page_banner(
+    symbol="🫀",
+    title="Health Risk Assessment",
+    subtitle="Evaluate lifestyle and wellness risk indicators from your daily habits. For general wellness information only.",
+    badge="🧬 Aarogya-AI Risk Screening",
 )
 
-st.title("⚠️ Health Risk Assessment")
-
-st.write(
-    "This tool provides a basic wellness risk assessment based on "
-    "the information you enter. It is not a medical diagnosis."
+render_gloss_card(
+    title="Wellness Screening Scope",
+    body="This tool provides a general wellness risk check based on sleep, activity steps, hydration, and stress inputs. It does not provide a medical diagnosis.",
+    symbol="🩺",
+    anim_class="anim-2"
 )
 
-st.divider()
+# =========================================================
+# INPUT FORM
+# =========================================================
 
-st.subheader("📋 Enter Your Information")
+st.markdown('<div class="purple-risk-head anim-1">📋 Enter Your Information</div>', unsafe_allow_html=True)
 
-age = st.number_input(
-    "Age",
-    min_value=1,
-    max_value=120,
-    value=20
-)
+with st.container(border=True):
+    c1, c2 = st.columns(2)
 
-sleep = st.number_input(
-    "Average sleep per day (hours)",
-    min_value=0.0,
-    max_value=24.0,
-    value=7.0
-)
+    with c1:
+        age = st.number_input(
+            "🧬 Age",
+            min_value=1,
+            max_value=120,
+            value=20
+        )
 
-steps = st.number_input(
-    "Average daily steps",
-    min_value=0,
-    max_value=100000,
-    value=5000
-)
+        sleep = st.number_input(
+            "💤 Average sleep per day (hours)",
+            min_value=0.0,
+            max_value=24.0,
+            value=7.0
+        )
 
-water = st.number_input(
-    "Approximate water intake (litres/day)",
-    min_value=0.0,
-    max_value=10.0,
-    value=2.0
-)
+        steps = st.number_input(
+            "🩺 Average daily steps",
+            min_value=0,
+            max_value=100000,
+            value=5000
+        )
 
-stress = st.slider(
-    "Stress level",
-    min_value=1,
-    max_value=10,
-    value=5
-)
+    with c2:
+        water = st.number_input(
+            "💧 Approximate water intake (litres/day)",
+            min_value=0.0,
+            max_value=10.0,
+            value=2.0
+        )
 
-st.divider()
+        stress = st.slider(
+            "💊 Stress level (1 = Low, 10 = High)",
+            min_value=1,
+            max_value=10,
+            value=5
+        )
 
-if st.button("🔍 Assess My Wellness Risk"):
+    assess_clicked = st.button("🔍 Assess My Wellness Risk", use_container_width=True)
 
+# =========================================================
+# ASSESSMENT LOGIC & RESULTS
+# =========================================================
+
+if assess_clicked:
     risk_score = 0
     warnings = []
 
@@ -88,41 +191,48 @@ if st.button("🔍 Assess My Wellness Risk"):
         risk_score += 1
         warnings.append("Your reported stress level is moderately high.")
 
-    st.subheader("📊 Assessment Result")
+    st.markdown('<div class="purple-risk-head anim-2">🫀 Assessment Result</div>', unsafe_allow_html=True)
 
     if risk_score <= 2:
-        st.success("🟢 Lower Wellness Risk")
-        st.write(
-            "Your entered information does not show many wellness risk indicators."
+        tier_label = "🟢 Lower Wellness Risk"
+        tier_desc = (
+            f"At age {int(age)}, your entered lifestyle habits show few wellness risk indicators "
+            f"(Wellness Risk Index: {risk_score}/8)."
         )
-
     elif risk_score <= 5:
-        st.warning("🟡 Moderate Wellness Risk")
-        st.write(
-            "Some lifestyle factors may need attention. "
-            "Consider improving sleep, activity, hydration, or stress management."
+        tier_label = "🟡 Moderate Wellness Risk"
+        tier_desc = (
+            f"At age {int(age)}, some daily habits may need attention "
+            f"(Wellness Risk Index: {risk_score}/8). Consider reviewing sleep, steps, hydration, or stress."
+        )
+    else:
+        tier_label = "🔴 Higher Wellness Risk"
+        tier_desc = (
+            f"At age {int(age)}, several wellness indicators warrant closer attention "
+            f"(Wellness Risk Index: {risk_score}/8). Consider speaking with a qualified healthcare professional."
         )
 
-    else:
-        st.error("🔴 Higher Wellness Risk")
-        st.write(
-            "Several wellness factors may need attention. "
-            "Consider discussing persistent concerns with a qualified healthcare professional."
-        )
+    st.markdown(f"""
+    <div class="gloss-risk-banner anim-2">
+        <div class="gloss-risk-tier"><span class="med-float">🩺</span> {tier_label}</div>
+        <p class="gloss-risk-desc">{tier_desc}</p>
+    </div>
+    """, unsafe_allow_html=True)
 
     if warnings:
-        st.subheader("💡 Areas to Pay Attention To")
-
+        st.markdown('<div class="purple-risk-head anim-3">💊 Areas to Pay Attention To</div>', unsafe_allow_html=True)
         for warning in warnings:
-            st.write("•", warning)
-
+            st.markdown(f"""
+            <div class="gloss-warning-item anim-3">
+                <span class="med-float">🩺</span> {warning}
+            </div>
+            """, unsafe_allow_html=True)
     else:
-        st.info("No major wellness warning indicators were detected.")
+        render_gloss_card(
+            title="Balanced Daily Indicators",
+            body="No major wellness warning indicators were detected from the values you entered.",
+            symbol="🧬",
+            anim_class="anim-3"
+        )
 
-    st.divider()
-
-    st.caption(
-        "Disclaimer: This assessment is for general wellness information only "
-        "and is not a medical diagnosis. Please consult a qualified medical "
-        "professional for personal medical advice."
-    )
+render_medical_disclaimer()

@@ -1,163 +1,149 @@
+import os
+import sys
+import importlib.util
 import streamlit as st
 
+# =========================================================
+# EXPLICIT ROOT PATH & Ui.py LOADER (pages/11_Medication _Safety.py)
+# =========================================================
+
+ROOT_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
+if ROOT_DIR not in sys.path:
+    sys.path.insert(0, ROOT_DIR)
+
+_ui_loaded = False
+for _candidate in ("Ui.py", "ui.py"):
+    _ui_path = os.path.join(ROOT_DIR, _candidate)
+    if os.path.exists(_ui_path):
+        _spec = importlib.util.spec_from_file_location("Ui", _ui_path)
+        _ui_mod = importlib.util.module_from_spec(_spec)
+        _spec.loader.exec_module(_ui_mod)
+        apply_glossy_purple_theme = _ui_mod.apply_glossy_purple_theme
+        render_page_banner = _ui_mod.render_page_banner
+        render_gloss_card = _ui_mod.render_gloss_card
+        render_medical_disclaimer = _ui_mod.render_medical_disclaimer
+        _ui_loaded = True
+        break
+
+if not _ui_loaded:
+    st.error(f"Could not find Ui.py in {ROOT_DIR}. Please ensure Ui.py is saved in the root aarogya-ai folder.")
+    st.stop()
+
 # NOTE: st.set_page_config() is handled by app.py — NOT repeated here.
-# Removed duplicate st.set_page_config() that was here before.
 
 # =========================================================
-# PAGE CSS
+# GLOSSY PURPLE THEME & PAGE STYLES
 # =========================================================
+
+apply_glossy_purple_theme()
 
 st.markdown("""
 <style>
-
-.med-shield-header {
-    background: linear-gradient(135deg, #6546B8 0%, #8B72D9 60%, #0284C7 100%);
-    border-radius: 22px;
-    padding: 32px 36px;
-    margin-bottom: 26px;
-    display: flex;
-    align-items: center;
-    gap: 22px;
-    box-shadow: 0 8px 28px rgba(101,70,184,0.22);
-    animation: fadeDown 0.6s ease;
-}
-
-.shield-icon {
-    font-size: 60px;
-    flex-shrink: 0;
-    animation: pulse 3s ease-in-out infinite;
-    filter: drop-shadow(0 4px 12px rgba(0,0,0,0.15));
-}
-
-.med-header-text h1 {
-    color: white !important;
-    font-size: 26px;
-    font-weight: 800;
-    margin: 0 0 8px 0;
-    letter-spacing: -0.4px;
-}
-
-.med-header-text p {
-    color: rgba(255,255,255,0.82);
-    font-size: 14px;
-    margin: 0;
-    line-height: 1.55;
-}
-
-.topic-select-card {
-    background: white;
-    border-radius: 20px;
-    padding: 26px 28px;
-    border: 1px solid rgba(139,114,217,0.1);
-    box-shadow: 0 2px 14px rgba(139,114,217,0.06);
-    margin-bottom: 22px;
-    animation: fadeUp 0.6s ease;
-}
-
-.topic-info-card {
-    background: white;
-    border-radius: 20px;
-    padding: 28px;
-    border: 1px solid rgba(139,114,217,0.1);
-    box-shadow: 0 4px 20px rgba(139,114,217,0.08);
-    margin-bottom: 22px;
-    animation: fadeUp 0.7s ease;
-}
-
-.topic-title {
+.purple-med-head {
     font-size: 20px;
-    font-weight: 700;
-    color: #1E293B;
+    font-weight: 800;
+    color: #2E1065;
+    letter-spacing: -0.3px;
+    margin: 22px 0 12px 0;
+}
+
+.gloss-med-panel {
+    position: relative;
+    overflow: hidden;
+    border-radius: 24px;
+    padding: 26px 28px;
+    background: linear-gradient(155deg, rgba(255, 255, 255, 0.96) 0%, rgba(243, 232, 255, 0.80) 100%);
+    backdrop-filter: blur(14px);
+    -webkit-backdrop-filter: blur(14px);
+    border: 1px solid rgba(216, 180, 254, 0.85);
+    box-shadow:
+        0 14px 32px rgba(109, 40, 217, 0.10),
+        inset 0 1px 0 rgba(255, 255, 255, 0.98);
+    margin: 18px 0;
+}
+
+.gloss-med-title {
+    font-size: 21px;
+    font-weight: 800;
+    color: #2E1065;
     margin-bottom: 16px;
     display: flex;
     align-items: center;
     gap: 10px;
 }
 
-.med-point {
+.gloss-med-point {
     display: flex;
     align-items: flex-start;
     gap: 10px;
-    padding: 12px 14px;
-    background: linear-gradient(135deg, #F0EDFD 0%, #EDE9FA 100%);
-    border-radius: 12px;
+    padding: 12px 16px;
+    background: linear-gradient(140deg, #FFFFFF 0%, #F3E8FF 100%);
+    border: 1px solid rgba(192, 132, 252, 0.55);
+    border-radius: 14px;
     font-size: 14px;
-    color: #1E293B;
+    font-weight: 600;
+    color: #2E1065;
     margin-bottom: 10px;
     line-height: 1.55;
+    box-shadow: 0 6px 14px rgba(109, 40, 217, 0.06);
 }
 
-.med-point-icon {
-    font-size: 16px;
-    margin-top: 1px;
-    flex-shrink: 0;
-}
-
-.section-divider {
-    height: 1px;
-    background: #EDE9FA;
-    margin: 22px 0;
-}
-
-.never-do-card {
-    background: linear-gradient(135deg, #FFF1F2 0%, #FFE4E6 100%);
+.gloss-urgent-box {
+    background: linear-gradient(145deg, #FFF1F2 0%, #FFE4E6 100%);
     border: 1px solid #FECDD3;
-    border-left: 4px solid #DC2626;
-    border-radius: 14px;
-    padding: 18px 22px;
-    margin: 16px 0;
-    font-size: 13px;
-    color: #9F1239;
-    line-height: 1.65;
+    border-left: 5px solid #DC2626;
+    border-radius: 16px;
+    padding: 16px 20px;
+    margin: 14px 0;
+    font-size: 13.5px;
+    color: #881337;
+    line-height: 1.6;
 }
 
-.consult-card {
-    background: linear-gradient(135deg, #F0FDF4 0%, #DCFCE7 100%);
-    border: 1px solid #86EFAC;
-    border-left: 4px solid #16A34A;
-    border-radius: 14px;
-    padding: 18px 22px;
-    margin: 16px 0;
-    font-size: 13px;
-    color: #14532D;
-    line-height: 1.65;
+.gloss-consult-box {
+    background: linear-gradient(145deg, rgba(250, 245, 255, 0.98), rgba(237, 233, 254, 0.88));
+    border: 1px solid rgba(168, 85, 247, 0.55);
+    border-left: 5px solid #6D28D9;
+    border-radius: 16px;
+    padding: 16px 20px;
+    margin: 14px 0;
+    font-size: 13.5px;
+    color: #2E1065;
+    line-height: 1.6;
 }
 
-@keyframes fadeUp {
-    from { opacity:0; transform:translateY(18px); }
-    to   { opacity:1; transform:translateY(0); }
+.gloss-principle-card {
+    position: relative;
+    overflow: hidden;
+    border-radius: 20px;
+    padding: 20px 22px;
+    background: linear-gradient(160deg, rgba(255, 255, 255, 0.95) 0%, rgba(243, 232, 255, 0.78) 100%);
+    backdrop-filter: blur(14px);
+    -webkit-backdrop-filter: blur(14px);
+    border: 1px solid rgba(216, 180, 254, 0.80);
+    box-shadow:
+        0 10px 24px rgba(109, 40, 217, 0.08),
+        inset 0 1px 0 rgba(255, 255, 255, 0.98);
+    transition: transform 0.25s ease, box-shadow 0.25s ease, border-color 0.25s ease;
+    height: 100%;
 }
 
-@keyframes fadeDown {
-    from { opacity:0; transform:translateY(-18px); }
-    to   { opacity:1; transform:translateY(0); }
+.gloss-principle-card:hover {
+    transform: translateY(-4px);
+    border-color: #C084FC;
+    box-shadow:
+        0 16px 32px rgba(126, 34, 206, 0.16),
+        inset 0 1px 0 rgba(255, 255, 255, 1);
 }
-
-@keyframes pulse {
-    0%, 100% { transform: scale(1); }
-    50%       { transform: scale(1.06); }
-}
-
 </style>
 """, unsafe_allow_html=True)
 
-
-# =========================================================
-# HEADER
-# =========================================================
-
-st.markdown("""
-<div class="med-shield-header">
-    <div class="shield-icon">🛡️</div>
-    <div class="med-header-text">
-        <h1>Medication Safety</h1>
-        <p>
-            Educational medication awareness information designed to promote safety.
-            This tool does not prescribe medicines or recommend dosages.
-        </p>
-    </div>
-</div>
-""", unsafe_allow_html=True)
+render_page_banner(
+    symbol="💊",
+    title="Medication Safety",
+    subtitle="Educational medication awareness information designed to promote safe handling. Does not prescribe medicines or dosages.",
+    badge="🧬 Aarogya-AI Medication Safety",
+)
 
 
 # =========================================================
@@ -228,48 +214,44 @@ topics = {
 # TOPIC SELECTION
 # =========================================================
 
-st.markdown('<div class="topic-select-card">', unsafe_allow_html=True)
-st.markdown('<div style="font-size:15px;font-weight:700;color:#1E293B;margin-bottom:12px;">📖 Choose a Safety Topic</div>', unsafe_allow_html=True)
+st.markdown('<div class="purple-med-head anim-1">🩺 Choose a Safety Topic</div>', unsafe_allow_html=True)
 
-selected_topic = st.selectbox(
-    "Choose a topic:",
-    list(topics.keys()),
-    label_visibility="collapsed"
-)
-st.markdown('</div>', unsafe_allow_html=True)
+with st.container(border=True):
+    selected_topic = st.selectbox(
+        "Choose a topic:",
+        list(topics.keys()),
+        label_visibility="collapsed"
+    )
 
-if st.button("🔍  Show Safety Information", use_container_width=False, type="primary"):
-    st.session_state["med_topic"] = selected_topic
+    if st.button("🔍  Show Safety Information", use_container_width=False, type="primary"):
+        st.session_state["med_topic"] = selected_topic
 
 if "med_topic" in st.session_state and st.session_state["med_topic"] in topics:
     topic_key = st.session_state["med_topic"]
     topic = topics[topic_key]
 
     points_html = "".join(
-        f'<div class="med-point"><span class="med-point-icon">✅</span>{p}</div>'
+        f'<div class="gloss-med-point"><span class="med-float">🩺</span><span>{p}</span></div>'
         for p in topic["points"]
     )
 
     st.markdown(f"""
-    <div class="topic-info-card">
-        <div class="topic-title">{topic["icon"]} {topic_key.split(' ', 1)[-1]}</div>
+    <div class="gloss-med-panel anim-2">
+        <div class="gloss-med-title">
+            <span class="med-float">{topic["icon"]}</span>
+            <span>{topic_key.split(' ', 1)[-1]}</span>
+        </div>
         {points_html}
-    </div>
-    """, unsafe_allow_html=True)
-
-    st.markdown("""
-    <div class="never-do-card">
-        🚫 <b>Important:</b>
-        If you experience a serious or unexpected reaction after taking a medicine,
-        seek urgent medical help immediately. Call <b>112</b> in India.
-    </div>
-    """, unsafe_allow_html=True)
-
-    st.markdown("""
-    <div class="consult-card">
-        👩‍⚕️ <b>Always Consult a Professional:</b>
-        For any personal medication questions, dosage concerns or health decisions,
-        please consult a qualified doctor or licensed pharmacist.
+        <div class="gloss-urgent-box">
+            <strong>🚨 Important:</strong>
+            If you experience a serious or unexpected reaction after taking a medicine,
+            seek urgent medical help immediately. Call <b>112</b> (Emergency) or <b>108</b> (Ambulance) in India.
+        </div>
+        <div class="gloss-consult-box">
+            <strong>🩺 Always Consult a Professional:</strong>
+            For any personal medication questions, dosage concerns, or health decisions,
+            please consult a qualified doctor or licensed pharmacist.
+        </div>
     </div>
     """, unsafe_allow_html=True)
 
@@ -278,23 +260,23 @@ if "med_topic" in st.session_state and st.session_state["med_topic"] in topics:
 # ALWAYS VISIBLE IMPORTANT NOTES
 # =========================================================
 
-st.markdown('<div class="section-title">⚠️ Important Safety Principles</div>', unsafe_allow_html=True)
+st.markdown('<div class="purple-med-head anim-2">🧬 Important Safety Principles</div>', unsafe_allow_html=True)
 
 ic1, ic2, ic3 = st.columns(3)
 
 safety_cards = [
-    ("💊", "Medication Awareness", "Always follow professional medical guidance when using any medicine."),
-    ("⚠️", "Know Your Medicine", "Understand what you are taking — read labels and ask questions."),
-    ("👩‍⚕️", "Consult a Professional", "A doctor or pharmacist is your best resource for medication questions."),
+    ("💊", "Medication Awareness", "Always follow professional medical guidance when using any medicine.", "anim-1"),
+    ("🩺", "Know Your Medicine", "Understand what you are taking — read labels and ask questions.", "anim-2"),
+    ("🫀", "Consult a Professional", "A doctor or pharmacist is your best resource for medication questions.", "anim-3"),
 ]
 
-for col, (icon, title, desc) in zip([ic1, ic2, ic3], safety_cards):
+for col, (icon, title, desc, anim_cls) in zip([ic1, ic2, ic3], safety_cards):
     with col:
         st.markdown(f"""
-        <div class="metric-card">
-            <span class="metric-icon">{icon}</span>
-            <div class="metric-label">{title}</div>
-            <div class="metric-value" style="font-size:14px;font-weight:600;color:#475569;margin-top:6px;">{desc}</div>
+        <div class="gloss-principle-card {anim_cls}">
+            <span class="ui-icon-chip med-float">{icon}</span>
+            <div style="font-size:15.5px;font-weight:800;color:#2E1065;margin:10px 0 6px 0;">{title}</div>
+            <div style="font-size:13.5px;font-weight:500;color:#3B0764;line-height:1.55;">{desc}</div>
         </div>""", unsafe_allow_html=True)
 
 
@@ -302,11 +284,4 @@ for col, (icon, title, desc) in zip([ic1, ic2, ic3], safety_cards):
 # SAFETY NOTICE
 # =========================================================
 
-st.markdown("""
-<div class="safety-card">
-    ⚠️ <b>Disclaimer:</b>
-    Aarogya-AI does not prescribe medicines, recommend dosages, or diagnose medical conditions.
-    This page is for general medication safety awareness only.
-    Please consult a qualified healthcare professional for all personal medical decisions.
-</div>
-""", unsafe_allow_html=True)
+render_medical_disclaimer()

@@ -1,12 +1,135 @@
-import streamlit as st
+import os
+import sys
 import sqlite3
+import importlib.util
 import pandas as pd
 import matplotlib
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
-import matplotlib.patches as mpatches
+import streamlit as st
+
+# =========================================================
+# EXPLICIT ROOT PATH & Ui.py LOADER (pages/4_Health_Analysis.py)
+# =========================================================
+
+ROOT_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
+if ROOT_DIR not in sys.path:
+    sys.path.insert(0, ROOT_DIR)
+
+_ui_loaded = False
+for _candidate in ("Ui.py", "ui.py"):
+    _ui_path = os.path.join(ROOT_DIR, _candidate)
+    if os.path.exists(_ui_path):
+        _spec = importlib.util.spec_from_file_location("Ui", _ui_path)
+        _ui_mod = importlib.util.module_from_spec(_spec)
+        _spec.loader.exec_module(_ui_mod)
+        apply_glossy_purple_theme = _ui_mod.apply_glossy_purple_theme
+        render_page_banner = _ui_mod.render_page_banner
+        render_gloss_card = _ui_mod.render_gloss_card
+        render_medical_disclaimer = _ui_mod.render_medical_disclaimer
+        _ui_loaded = True
+        break
+
+if not _ui_loaded:
+    st.error(f"Could not find Ui.py in {ROOT_DIR}. Please ensure Ui.py is saved in the root aarogya-ai folder.")
+    st.stop()
 
 # NOTE: st.set_page_config() is handled by app.py — NOT repeated here.
+
+# =========================================================
+# GLOSSY PURPLE THEME & PAGE STYLES
+# =========================================================
+
+apply_glossy_purple_theme()
+
+st.markdown("""
+<style>
+.purple-heading {
+    font-size: 20px;
+    font-weight: 800;
+    color: #2E1065;
+    letter-spacing: -0.3px;
+    margin: 24px 0 12px 0;
+}
+
+.gloss-kpi-card {
+    position: relative;
+    overflow: hidden;
+    border-radius: 20px;
+    padding: 20px;
+    background: linear-gradient(155deg, rgba(255, 255, 255, 0.95) 0%, rgba(243, 232, 255, 0.78) 100%);
+    backdrop-filter: blur(14px);
+    -webkit-backdrop-filter: blur(14px);
+    border: 1px solid rgba(216, 180, 254, 0.80);
+    box-shadow:
+        0 10px 24px rgba(109, 40, 217, 0.08),
+        inset 0 1px 0 rgba(255, 255, 255, 0.98);
+    transition: transform 0.25s ease, box-shadow 0.25s ease, border-color 0.25s ease;
+}
+
+.gloss-kpi-card:hover {
+    transform: translateY(-4px);
+    border-color: #C084FC;
+    box-shadow:
+        0 16px 32px rgba(126, 34, 206, 0.16),
+        inset 0 1px 0 rgba(255, 255, 255, 1);
+}
+
+.gloss-kpi-label {
+    font-size: 13px;
+    font-weight: 700;
+    color: #5B21B6;
+    margin-bottom: 6px;
+}
+
+.gloss-kpi-value {
+    font-size: 28px;
+    font-weight: 800;
+    color: #1E1035;
+    letter-spacing: -0.5px;
+    margin-bottom: 4px;
+}
+
+.gloss-kpi-sub {
+    font-size: 12.5px;
+    font-weight: 600;
+    color: #6D28D9;
+}
+
+.gloss-insight-box {
+    border-radius: 18px;
+    padding: 16px 20px;
+    margin: 12px 0;
+    background: linear-gradient(155deg, rgba(255, 255, 255, 0.94) 0%, rgba(243, 232, 255, 0.78) 100%);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border: 1px solid rgba(216, 180, 254, 0.78);
+    border-left: 4px solid #7E22CE;
+    color: #2E1065;
+    font-size: 14px;
+    line-height: 1.6;
+    box-shadow: 0 8px 20px rgba(109, 40, 217, 0.06);
+}
+
+.gloss-insight-box.good {
+    border-left-color: #6D28D9;
+    background: linear-gradient(155deg, rgba(250, 245, 255, 0.96) 0%, rgba(237, 233, 254, 0.86) 100%);
+}
+
+.gloss-insight-box.warn {
+    border-left-color: #9333EA;
+    background: linear-gradient(155deg, rgba(255, 255, 255, 0.95) 0%, rgba(245, 208, 254, 0.45) 100%);
+}
+</style>
+""", unsafe_allow_html=True)
+
+render_page_banner(
+    symbol="🧬",
+    title="Health Analysis & Trends",
+    subtitle="Understand your wellness patterns through clinical data insights and longitudinal trend charts.",
+    badge="🧬 Aarogya-AI Analytics Engine",
+)
+
 
 # =========================================================
 # DATABASE
@@ -22,8 +145,9 @@ def _load_analysis_data():
         )
         conn.close()
         return df
-    except Exception as e:
+    except Exception:
         return None
+
 
 _df_result = _load_analysis_data()
 if _df_result is None:
@@ -37,112 +161,17 @@ df = _df_result
 # =========================================================
 
 def apply_premium_style(ax, fig):
-    fig.patch.set_facecolor("#FFFFFF")
-    ax.set_facecolor("#FAFBFF")
+    fig.patch.set_facecolor("#FAF7FF")
+    ax.set_facecolor("#FFFFFF")
     ax.spines["top"].set_visible(False)
     ax.spines["right"].set_visible(False)
-    ax.spines["left"].set_color("#E2E8F0")
-    ax.spines["bottom"].set_color("#E2E8F0")
-    ax.tick_params(colors="#64748B", labelsize=9)
-    ax.xaxis.label.set_color("#64748B")
-    ax.yaxis.label.set_color("#64748B")
-    ax.title.set_color("#1E293B")
+    ax.spines["left"].set_color("#DDD6FE")
+    ax.spines["bottom"].set_color("#DDD6FE")
+    ax.tick_params(colors="#4C1D95", labelsize=9)
+    ax.xaxis.label.set_color("#4C1D95")
+    ax.yaxis.label.set_color("#4C1D95")
+    ax.title.set_color("#2E1065")
     plt.xticks(rotation=35, ha="right")
-
-
-# =========================================================
-# PAGE CSS
-# =========================================================
-
-st.markdown("""
-<style>
-
-.analysis-insight {
-    background: linear-gradient(135deg, #F0EDFD 0%, #EDE9FA 100%);
-    border: 1px solid rgba(139,114,217,0.18);
-    border-left: 4px solid #8B72D9;
-    border-radius: 14px;
-    padding: 18px 22px;
-    margin: 14px 0;
-    animation: fadeUp 0.7s ease;
-    font-size: 14px;
-    color: #1E293B;
-    line-height: 1.6;
-}
-
-.analysis-insight.good {
-    background: linear-gradient(135deg, #F0FDF4 0%, #DCFCE7 100%);
-    border-left-color: #16A34A;
-    color: #14532D;
-}
-
-.analysis-insight.warn {
-    background: linear-gradient(135deg, #FFFBEB 0%, #FEF3C7 100%);
-    border-left-color: #F59E0B;
-    color: #78350F;
-}
-
-.chart-section {
-    background: white;
-    border-radius: 20px;
-    padding: 24px;
-    border: 1px solid rgba(139,114,217,0.08);
-    box-shadow: 0 2px 14px rgba(139,114,217,0.06);
-    margin-bottom: 20px;
-    animation: fadeUp 0.75s ease;
-}
-
-.chart-section-title {
-    font-size: 16px;
-    font-weight: 700;
-    color: #1E293B;
-    margin-bottom: 16px;
-    display: flex;
-    align-items: center;
-    gap: 8px;
-}
-
-.stat-row {
-    display: flex;
-    gap: 10px;
-    flex-wrap: wrap;
-    margin-top: 10px;
-}
-
-.stat-pill {
-    background: #F8F7FC;
-    border: 1px solid #EDE9FA;
-    border-radius: 10px;
-    padding: 8px 14px;
-    font-size: 13px;
-    color: #6546B8;
-    font-weight: 600;
-}
-
-@keyframes fadeUp {
-    from { opacity:0; transform:translateY(18px); }
-    to   { opacity:1; transform:translateY(0); }
-}
-
-@keyframes fadeDown {
-    from { opacity:0; transform:translateY(-18px); }
-    to   { opacity:1; transform:translateY(0); }
-}
-
-</style>
-""", unsafe_allow_html=True)
-
-
-# =========================================================
-# HEADER
-# =========================================================
-
-st.markdown("""
-<div class="page-header">
-    <h1>📊 Health Analysis</h1>
-    <p>Understand your wellness patterns through AI-assisted data insights and trend visualization.</p>
-</div>
-""", unsafe_allow_html=True)
 
 
 # =========================================================
@@ -150,15 +179,13 @@ st.markdown("""
 # =========================================================
 
 if df.empty:
-    st.markdown("""
-    <div style="text-align:center;padding:60px 32px;background:white;border-radius:20px;border:1px dashed #DDD6FE;">
-        <span style="font-size:64px;display:block;margin-bottom:16px;">👩‍⚕️</span>
-        <div style="font-size:18px;font-weight:700;color:#1E293B;margin-bottom:8px;">No health data available</div>
-        <div style="font-size:14px;color:#94A3B8;">
-            Please add your health data from the ❤️ Health Data page to view analysis.
-        </div>
-    </div>
-    """, unsafe_allow_html=True)
+    render_gloss_card(
+        title="No Health Data Available",
+        body="Please add your health measurements from the Health Data page to unlock trend analytics and wellness insights.",
+        symbol="🩺",
+        anim_class="anim-2"
+    )
+    render_medical_disclaimer()
     st.stop()
 
 
@@ -171,12 +198,13 @@ df = df.dropna(subset=["date"]).sort_values("date").reset_index(drop=True)
 
 if df.empty:
     st.warning("⚠️ No valid health records available.")
+    render_medical_disclaimer()
     st.stop()
 
-latest      = df.iloc[-1]
-avg_weight  = df["weight"].mean()
-avg_steps   = df["steps"].mean()
-avg_sleep   = df["sleep"].mean()
+latest = df.iloc[-1]
+avg_weight = df["weight"].mean()
+avg_steps = df["steps"].mean()
+avg_sleep = df["sleep"].mean()
 
 
 # =========================================================
@@ -184,8 +212,8 @@ avg_sleep   = df["sleep"].mean()
 # =========================================================
 
 st.markdown(f"""
-<div class="analysis-insight">
-    ✅ <b>{len(df)}</b> health record(s) available for analysis.
+<div class="gloss-insight-box anim-1">
+    <span class="med-float">🧬</span> <b>{len(df)}</b> health record(s) available for analysis.
     &nbsp;·&nbsp; Data range: <b>{df["date"].min().strftime("%d %b %Y")}</b>
     &nbsp;→&nbsp; <b>{df["date"].max().strftime("%d %b %Y")}</b>
 </div>
@@ -196,35 +224,32 @@ st.markdown(f"""
 # OVERVIEW METRICS
 # =========================================================
 
-st.markdown('<div class="section-title">📌 Latest Health Overview</div>', unsafe_allow_html=True)
+st.markdown('<div class="purple-heading anim-1">🫀 Latest Health Overview</div>', unsafe_allow_html=True)
 
 oc1, oc2, oc3 = st.columns(3)
 
 with oc1:
     st.markdown(f"""
-    <div class="metric-card">
-        <span class="metric-icon">⚖️</span>
-        <div class="metric-label">Latest Weight</div>
-        <div class="metric-value">{latest['weight']:.1f} kg</div>
-        <div class="metric-sub">Avg: {avg_weight:.2f} kg</div>
+    <div class="gloss-kpi-card anim-1">
+        <div class="gloss-kpi-label"><span class="med-float">⚖️</span> Latest Weight</div>
+        <div class="gloss-kpi-value">{latest['weight']:.1f} kg</div>
+        <div class="gloss-kpi-sub">Avg: {avg_weight:.2f} kg</div>
     </div>""", unsafe_allow_html=True)
 
 with oc2:
     st.markdown(f"""
-    <div class="metric-card">
-        <span class="metric-icon">👣</span>
-        <div class="metric-label">Latest Steps</div>
-        <div class="metric-value">{int(latest['steps']):,}</div>
-        <div class="metric-sub">Avg: {avg_steps:.0f} steps/day</div>
+    <div class="gloss-kpi-card anim-2">
+        <div class="gloss-kpi-label"><span class="med-float">🩺</span> Latest Steps</div>
+        <div class="gloss-kpi-value">{int(latest['steps']):,}</div>
+        <div class="gloss-kpi-sub">Avg: {avg_steps:.0f} steps/day</div>
     </div>""", unsafe_allow_html=True)
 
 with oc3:
     st.markdown(f"""
-    <div class="metric-card">
-        <span class="metric-icon">😴</span>
-        <div class="metric-label">Latest Sleep</div>
-        <div class="metric-value">{latest['sleep']:.1f} hrs</div>
-        <div class="metric-sub">Avg: {avg_sleep:.2f} hrs/night</div>
+    <div class="gloss-kpi-card anim-3">
+        <div class="gloss-kpi-label"><span class="med-float">💤</span> Latest Sleep</div>
+        <div class="gloss-kpi-value">{latest['sleep']:.1f} hrs</div>
+        <div class="gloss-kpi-sub">Avg: {avg_sleep:.2f} hrs/night</div>
     </div>""", unsafe_allow_html=True)
 
 
@@ -232,84 +257,81 @@ with oc3:
 # CHARTS
 # =========================================================
 
-st.markdown('<div class="section-title">📈 Health Trends</div>', unsafe_allow_html=True)
+st.markdown('<div class="purple-heading anim-2">🧬 Health Trends</div>', unsafe_allow_html=True)
 
-PURPLE  = "#8B72D9"
-TEAL    = "#0F766E"
-BLUE    = "#0284C7"
+DEEP_VIOLET = "#6D28D9"
+ROYAL_PURPLE = "#7E22CE"
+AMETHYST = "#9333EA"
 
 # ---- Weight ----
-st.markdown('<div class="chart-section"><div class="chart-section-title">⚖️ Weight Trend</div>', unsafe_allow_html=True)
-fig1, ax1 = plt.subplots(figsize=(9, 3.2))
-ax1.fill_between(df["date"], df["weight"], alpha=0.12, color=TEAL)
-ax1.plot(df["date"], df["weight"], color=TEAL, linewidth=2.2, marker="o", markersize=5)
-ax1.set_ylabel("Weight (kg)")
-ax1.set_title("")
-apply_premium_style(ax1, fig1)
-plt.tight_layout()
-st.pyplot(fig1, use_container_width=True)
-plt.close(fig1)
-st.markdown('</div>', unsafe_allow_html=True)
+with st.container(border=True):
+    st.markdown("**⚖️ Weight Trend**")
+    fig1, ax1 = plt.subplots(figsize=(9, 3.2))
+    ax1.fill_between(df["date"], df["weight"], alpha=0.14, color=DEEP_VIOLET)
+    ax1.plot(df["date"], df["weight"], color=DEEP_VIOLET, linewidth=2.2, marker="o", markersize=5)
+    ax1.set_ylabel("Weight (kg)")
+    ax1.set_title("")
+    apply_premium_style(ax1, fig1)
+    plt.tight_layout()
+    st.pyplot(fig1, use_container_width=True)
+    plt.close(fig1)
 
 # ---- Steps ----
-st.markdown('<div class="chart-section"><div class="chart-section-title">👣 Daily Steps Trend</div>', unsafe_allow_html=True)
-fig2, ax2 = plt.subplots(figsize=(9, 3.2))
-ax2.fill_between(df["date"], df["steps"], alpha=0.12, color=PURPLE)
-ax2.plot(df["date"], df["steps"], color=PURPLE, linewidth=2.2, marker="o", markersize=5)
-ax2.axhline(7000, color="#F59E0B", linestyle="--", linewidth=1.2, alpha=0.8, label="7,000 step reference")
-ax2.legend(fontsize=9)
-ax2.set_ylabel("Steps")
-apply_premium_style(ax2, fig2)
-plt.tight_layout()
-st.pyplot(fig2, use_container_width=True)
-plt.close(fig2)
-st.markdown('</div>', unsafe_allow_html=True)
+with st.container(border=True):
+    st.markdown("**🩺 Daily Steps Trend**")
+    fig2, ax2 = plt.subplots(figsize=(9, 3.2))
+    ax2.fill_between(df["date"], df["steps"], alpha=0.14, color=ROYAL_PURPLE)
+    ax2.plot(df["date"], df["steps"], color=ROYAL_PURPLE, linewidth=2.2, marker="o", markersize=5)
+    ax2.axhline(7000, color="#A855F7", linestyle="--", linewidth=1.3, alpha=0.85, label="7,000 step reference")
+    ax2.legend(fontsize=9)
+    ax2.set_ylabel("Steps")
+    apply_premium_style(ax2, fig2)
+    plt.tight_layout()
+    st.pyplot(fig2, use_container_width=True)
+    plt.close(fig2)
 
 # ---- Sleep ----
-st.markdown('<div class="chart-section"><div class="chart-section-title">😴 Sleep Duration Trend</div>', unsafe_allow_html=True)
-fig3, ax3 = plt.subplots(figsize=(9, 3.2))
-ax3.fill_between(df["date"], df["sleep"], alpha=0.12, color=BLUE)
-ax3.plot(df["date"], df["sleep"], color=BLUE, linewidth=2.2, marker="o", markersize=5)
-ax3.axhline(7, color="#16A34A", linestyle="--", linewidth=1.2, alpha=0.8, label="7-hr reference")
-ax3.legend(fontsize=9)
-ax3.set_ylabel("Sleep (hours)")
-apply_premium_style(ax3, fig3)
-plt.tight_layout()
-st.pyplot(fig3, use_container_width=True)
-plt.close(fig3)
-st.markdown('</div>', unsafe_allow_html=True)
+with st.container(border=True):
+    st.markdown("**💤 Sleep Duration Trend**")
+    fig3, ax3 = plt.subplots(figsize=(9, 3.2))
+    ax3.fill_between(df["date"], df["sleep"], alpha=0.14, color=AMETHYST)
+    ax3.plot(df["date"], df["sleep"], color=AMETHYST, linewidth=2.2, marker="o", markersize=5)
+    ax3.axhline(7, color="#7E22CE", linestyle="--", linewidth=1.3, alpha=0.85, label="7-hr reference")
+    ax3.legend(fontsize=9)
+    ax3.set_ylabel("Sleep (hours)")
+    apply_premium_style(ax3, fig3)
+    plt.tight_layout()
+    st.pyplot(fig3, use_container_width=True)
+    plt.close(fig3)
 
 
 # =========================================================
 # STATISTICS
 # =========================================================
 
-st.markdown('<div class="section-title">📋 Health Statistics</div>', unsafe_allow_html=True)
+st.markdown('<div class="purple-heading anim-2">💊 Health Statistics</div>', unsafe_allow_html=True)
 
 sc1, sc2, sc3 = st.columns(3)
 
 with sc1:
     st.markdown(f"""
-    <div class="metric-card">
-        <span class="metric-icon">⚖️</span>
-        <div class="metric-label">Average Weight</div>
-        <div class="metric-value">{avg_weight:.2f} kg</div>
+    <div class="gloss-kpi-card anim-1">
+        <div class="gloss-kpi-label"><span class="med-float">⚖️</span> Average Weight</div>
+        <div class="gloss-kpi-value">{avg_weight:.2f} kg</div>
     </div>""", unsafe_allow_html=True)
 
 with sc2:
     st.markdown(f"""
-    <div class="metric-card">
-        <span class="metric-icon">👣</span>
-        <div class="metric-label">Average Steps</div>
-        <div class="metric-value">{avg_steps:.0f}</div>
+    <div class="gloss-kpi-card anim-2">
+        <div class="gloss-kpi-label"><span class="med-float">🩺</span> Average Steps</div>
+        <div class="gloss-kpi-value">{avg_steps:.0f}</div>
     </div>""", unsafe_allow_html=True)
 
 with sc3:
     st.markdown(f"""
-    <div class="metric-card">
-        <span class="metric-icon">😴</span>
-        <div class="metric-label">Average Sleep</div>
-        <div class="metric-value">{avg_sleep:.2f} hrs</div>
+    <div class="gloss-kpi-card anim-3">
+        <div class="gloss-kpi-label"><span class="med-float">💤</span> Average Sleep</div>
+        <div class="gloss-kpi-value">{avg_sleep:.2f} hrs</div>
     </div>""", unsafe_allow_html=True)
 
 
@@ -317,31 +339,31 @@ with sc3:
 # WELLNESS INSIGHTS
 # =========================================================
 
-st.markdown('<div class="section-title">💡 Wellness Insights</div>', unsafe_allow_html=True)
+st.markdown('<div class="purple-heading anim-3">🩺 Wellness Insights</div>', unsafe_allow_html=True)
 
 activity_class = "good" if avg_steps >= 7000 else "warn"
-activity_msg   = (
+activity_msg = (
     "Your recorded activity level shows consistent daily movement. Keep it up!"
     if avg_steps >= 7000
     else "Your recorded activity level may benefit from more regular movement."
 )
 
 sleep_class = "good" if avg_sleep >= 7 else "warn"
-sleep_msg   = (
+sleep_msg = (
     "Your recorded average sleep duration is within a commonly recommended range."
     if avg_sleep >= 7
     else "Your recorded average sleep duration is below 7 hours."
 )
 
 st.markdown(f"""
-<div class="analysis-insight {activity_class}">
-    👣 <b>Activity Insight:</b> {activity_msg}
+<div class="gloss-insight-box {activity_class} anim-2">
+    <span class="med-float">🩺</span> <b>Activity Insight:</b> {activity_msg}
 </div>
-<div class="analysis-insight {sleep_class}">
-    😴 <b>Sleep Insight:</b> {sleep_msg}
+<div class="gloss-insight-box {sleep_class} anim-3">
+    <span class="med-float">💤</span> <b>Sleep Insight:</b> {sleep_msg}
 </div>
-<div class="analysis-insight">
-    📊 <b>Data:</b> You currently have <b>{len(df)}</b> health record(s) available.
+<div class="gloss-insight-box anim-4">
+    <span class="med-float">🧬</span> <b>Data Summary:</b> You currently have <b>{len(df)}</b> health record(s) available.
     Continue adding records for richer trend analysis.
 </div>
 """, unsafe_allow_html=True)
@@ -351,7 +373,7 @@ st.markdown(f"""
 # DATA TABLE
 # =========================================================
 
-st.markdown('<div class="section-title">📑 Recorded Health Data</div>', unsafe_allow_html=True)
+st.markdown('<div class="purple-heading anim-3">📋 Recorded Health Data</div>', unsafe_allow_html=True)
 
 display_df = df.copy()
 display_df["date"] = display_df["date"].dt.strftime("%Y-%m-%d")
@@ -362,11 +384,4 @@ st.dataframe(display_df, use_container_width=True, hide_index=True)
 # SAFETY NOTICE
 # =========================================================
 
-st.markdown("""
-<div class="safety-card">
-    ⚠️ <b>Safety Notice:</b>
-    This analysis summarizes recorded wellness data only.
-    It does not diagnose diseases or provide medical advice.
-    Please consult a qualified healthcare professional for personal medical concerns.
-</div>
-""", unsafe_allow_html=True)
+render_medical_disclaimer()

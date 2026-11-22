@@ -1,65 +1,55 @@
+import os
 import hashlib
 import hmac
-import os
-from datetime import datetime, timedelta, timezone
-
 import jwt
 
+from datetime import datetime, timedelta, timezone
 from fastapi import Depends, HTTPException
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 
-SECRET_KEY = os.getenv(
-    "JWT_SECRET_KEY",
-    "CHANGE_THIS_SECRET_BEFORE_DEPLOYMENT"
-)
+from backend.database import get_connection
 
+SECRET_KEY = os.getenv("JWT_SECRET_KEY", "dev-local-secret-change-me")
 ALGORITHM = "HS256"
-
-TOKEN_MINUTES = 60 * 12
 
 bearer = HTTPBearer()
 
 
-# Password Encryption
-def hash_password(password: str):
+def hash_password(password):
 
     salt = os.urandom(16)
 
-    digest = hashlib.pbkdf2_hmac(
+    hashed = hashlib.pbkdf2_hmac(
         "sha256",
         password.encode(),
         salt,
         180000
     )
 
-    return salt.hex() + ":" + digest.hex()
+    return salt.hex() + ":" + hashed.hex()
 
 
-# Verify Password
-def verify_password(password: str, stored: str):
+def verify_password(password, stored):
 
     try:
-        salt_hex, digest_hex = stored.split(":")
+        salt, original_hash = stored.split(":")
 
-        actual = hashlib.pbkdf2_hmac(
+        new_hash = hashlib.pbkdf2_hmac(
             "sha256",
             password.encode(),
-            bytes.fromhex(salt_hex),
+            bytes.fromhex(salt),
             180000
         ).hex()
 
-        return hmac.compare_digest(actual, digest_hex)
+        return hmac.compare_digest(new_hash, original_hash)
 
     except (ValueError, TypeError):
         return False
 
 
-# Generate Login Token
-def create_access_token(user_id: int):
+def create_access_token(user_id):
 
-    expiry = datetime.now(timezone.utc) + timedelta(
-        minutes=TOKEN_MINUTES
-    )
+    expiry = datetime.now(timezone.utc) + timedelta(hours=12)
 
     return jwt.encode(
         {
@@ -71,12 +61,9 @@ def create_access_token(user_id: int):
     )
 
 
-# Get Logged-in User
 def get_current_user(
     credentials: HTTPAuthorizationCredentials = Depends(bearer)
 ):
-
-    from backend.database import get_connection
 
     try:
         payload = jwt.decode(
@@ -100,7 +87,7 @@ def get_current_user(
             (user_id,)
         ).fetchone()
 
-    if not user:
+    if user is None:
         raise HTTPException(
             status_code=401,
             detail="User not found"

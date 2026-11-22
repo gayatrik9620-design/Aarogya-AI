@@ -1,115 +1,138 @@
+import os
+import sys
+import importlib.util
 import streamlit as st
 
+# =========================================================
+# EXPLICIT ROOT PATH & Ui.py LOADER (pages/9_Symptom_Information.py)
+# =========================================================
+
+ROOT_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
+if ROOT_DIR not in sys.path:
+    sys.path.insert(0, ROOT_DIR)
+
+_ui_loaded = False
+for _candidate in ("Ui.py", "ui.py"):
+    _ui_path = os.path.join(ROOT_DIR, _candidate)
+    if os.path.exists(_ui_path):
+        _spec = importlib.util.spec_from_file_location("Ui", _ui_path)
+        _ui_mod = importlib.util.module_from_spec(_spec)
+        _spec.loader.exec_module(_ui_mod)
+        apply_glossy_purple_theme = _ui_mod.apply_glossy_purple_theme
+        render_page_banner = _ui_mod.render_page_banner
+        render_gloss_card = _ui_mod.render_gloss_card
+        render_medical_disclaimer = _ui_mod.render_medical_disclaimer
+        _ui_loaded = True
+        break
+
+if not _ui_loaded:
+    st.error(f"Could not find Ui.py in {ROOT_DIR}. Please ensure Ui.py is saved in the root aarogya-ai folder.")
+    st.stop()
+
 # NOTE: st.set_page_config() is handled by app.py — NOT repeated here.
-# Removed duplicate st.set_page_config() that was here before.
 
 # =========================================================
-# PAGE CSS
+# GLOSSY PURPLE THEME & PAGE STYLES
 # =========================================================
+
+apply_glossy_purple_theme()
 
 st.markdown("""
 <style>
-
-.symptom-select-card {
-    background: white;
-    border-radius: 20px;
-    padding: 28px;
-    border: 1px solid rgba(139,114,217,0.1);
-    box-shadow: 0 2px 14px rgba(139,114,217,0.06);
-    margin-bottom: 22px;
-    animation: fadeUp 0.6s ease;
+.purple-symp-head {
+    font-size: 20px;
+    font-weight: 800;
+    color: #2E1065;
+    letter-spacing: -0.3px;
+    margin: 22px 0 12px 0;
 }
 
-.symptom-info-card {
-    background: white;
-    border-radius: 20px;
-    padding: 28px;
-    border: 1px solid rgba(139,114,217,0.1);
-    box-shadow: 0 4px 20px rgba(139,114,217,0.08);
-    margin-bottom: 20px;
-    animation: fadeUp 0.7s ease;
+.gloss-symptom-panel {
+    position: relative;
+    overflow: hidden;
+    border-radius: 24px;
+    padding: 26px 28px;
+    background: linear-gradient(155deg, rgba(255, 255, 255, 0.96) 0%, rgba(243, 232, 255, 0.80) 100%);
+    backdrop-filter: blur(14px);
+    -webkit-backdrop-filter: blur(14px);
+    border: 1px solid rgba(216, 180, 254, 0.85);
+    box-shadow:
+        0 14px 32px rgba(109, 40, 217, 0.10),
+        inset 0 1px 0 rgba(255, 255, 255, 0.98);
+    margin: 18px 0;
 }
 
-.symptom-name {
+.gloss-symptom-title {
     font-size: 22px;
     font-weight: 800;
-    color: #1E293B;
-    margin-bottom: 6px;
+    color: #2E1065;
+    margin-bottom: 8px;
     display: flex;
     align-items: center;
     gap: 10px;
 }
 
-.symptom-info-text {
-    font-size: 14px;
-    color: #475569;
+.gloss-symptom-desc {
+    font-size: 14.5px;
+    color: #3B0764;
     line-height: 1.65;
     margin-bottom: 18px;
 }
 
-.tips-grid {
+.gloss-tips-grid {
     display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 10px;
-    margin-top: 12px;
+    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+    gap: 12px;
+    margin-top: 10px;
 }
 
-.tip-item {
-    background: linear-gradient(135deg, #F0EDFD 0%, #EDE9FA 100%);
-    border-radius: 12px;
-    padding: 12px 14px;
-    font-size: 13px;
-    color: #4C3599;
+.gloss-tip-pill {
+    background: linear-gradient(145deg, #FFFFFF 0%, #F3E8FF 100%);
+    border: 1px solid rgba(192, 132, 252, 0.55);
+    border-radius: 14px;
+    padding: 13px 16px;
+    font-size: 13.5px;
+    font-weight: 600;
+    color: #2E1065;
     display: flex;
     align-items: flex-start;
     gap: 8px;
     line-height: 1.5;
+    box-shadow: 0 6px 14px rgba(109, 40, 217, 0.06);
 }
 
-.seek-help-card {
-    background: linear-gradient(135deg, #FFFBEB 0%, #FEF3C7 100%);
-    border: 1px solid #FDE68A;
-    border-left: 4px solid #F59E0B;
-    border-radius: 14px;
-    padding: 18px 22px;
+.gloss-seek-box {
+    background: linear-gradient(145deg, rgba(250, 245, 255, 0.98), rgba(237, 233, 254, 0.88));
+    border: 1px solid rgba(168, 85, 247, 0.55);
+    border-left: 5px solid #7E22CE;
+    border-radius: 16px;
+    padding: 16px 20px;
     margin-top: 18px;
-    font-size: 13px;
-    color: #78350F;
-    line-height: 1.65;
+    font-size: 13.5px;
+    color: #2E1065;
+    line-height: 1.6;
 }
 
-.emergency-note {
-    background: linear-gradient(135deg, #FFF1F2 0%, #FFE4E6 100%);
+.gloss-emergency-box {
+    background: linear-gradient(145deg, #FFF1F2 0%, #FFE4E6 100%);
     border: 1px solid #FECDD3;
-    border-left: 4px solid #DC2626;
-    border-radius: 14px;
-    padding: 18px 22px;
+    border-left: 5px solid #DC2626;
+    border-radius: 16px;
+    padding: 16px 20px;
     margin-top: 14px;
-    font-size: 13px;
-    color: #9F1239;
-    line-height: 1.65;
+    font-size: 13.5px;
+    color: #881337;
+    line-height: 1.6;
 }
-
-.tips-label {
-    font-size: 14px;
-    font-weight: 700;
-    color: #1E293B;
-    margin-bottom: 12px;
-    margin-top: 4px;
-}
-
-@keyframes fadeUp {
-    from { opacity:0; transform:translateY(18px); }
-    to   { opacity:1; transform:translateY(0); }
-}
-
-@keyframes fadeDown {
-    from { opacity:0; transform:translateY(-18px); }
-    to   { opacity:1; transform:translateY(0); }
-}
-
 </style>
 """, unsafe_allow_html=True)
+
+render_page_banner(
+    symbol="🩺",
+    title="Symptom Information",
+    subtitle="Educational health awareness for common symptoms, self-care habits, and red-flag warning signs.",
+    badge="🧬 Aarogya-AI Clinical Reference",
+)
 
 
 # =========================================================
@@ -192,66 +215,49 @@ symptoms = {
 
 
 # =========================================================
-# HEADER
-# =========================================================
-
-st.markdown("""
-<div class="page-header">
-    <h1>🩺 Symptom Information</h1>
-    <p>Educational health information about common symptoms. This tool is for general awareness only.</p>
-</div>
-""", unsafe_allow_html=True)
-
-
-# =========================================================
 # SELECTION
 # =========================================================
 
-st.markdown('<div class="symptom-select-card">', unsafe_allow_html=True)
-st.markdown('<div style="font-size:15px;font-weight:700;color:#1E293B;margin-bottom:12px;">🔍 Select a Symptom</div>', unsafe_allow_html=True)
+st.markdown('<div class="purple-symp-head anim-1">🔍 Select a Symptom</div>', unsafe_allow_html=True)
 
-selected = st.selectbox(
-    "Select a symptom to learn about:",
-    list(symptoms.keys()),
-    label_visibility="collapsed"
-)
+with st.container(border=True):
+    selected = st.selectbox(
+        "Select a symptom to learn about:",
+        list(symptoms.keys()),
+        label_visibility="collapsed"
+    )
 
-st.markdown('</div>', unsafe_allow_html=True)
-
-if st.button("📖  Get Symptom Information", use_container_width=False, type="primary"):
-    st.session_state["show_symptom"] = selected
+    if st.button("📖  Get Symptom Information", use_container_width=False, type="primary"):
+        st.session_state["show_symptom"] = selected
 
 if "show_symptom" in st.session_state and st.session_state["show_symptom"] in symptoms:
     sel = st.session_state["show_symptom"]
     data = symptoms[sel]
+    tips_html = "".join(f'<div class="gloss-tip-pill"><span>🩺</span><span>{tip}</span></div>' for tip in data["tips"])
 
-    # Info card
     st.markdown(f"""
-    <div class="symptom-info-card">
-        <div class="symptom-name">{data['emoji']} {sel.split(' ', 1)[-1]}</div>
-        <div class="symptom-info-text">{data['info']}</div>
-        <div class="tips-label">💡 General Wellness Tips</div>
-        <div class="tips-grid">
-            {''.join(f'<div class="tip-item">✅ {tip}</div>' for tip in data["tips"])}
+    <div class="gloss-symptom-panel anim-2">
+        <div class="gloss-symptom-title">
+            <span class="med-float">{data['emoji']}</span>
+            <span>{sel.split(' ', 1)[-1]}</span>
         </div>
-        <div class="seek-help-card" style="margin-top:18px;">
-            🩺 <b>When to Seek Professional Help:</b><br>
+        <div class="gloss-symptom-desc">{data['info']}</div>
+        <div style="font-size:15px;font-weight:800;color:#2E1065;margin-bottom:8px;">
+            💊 General Wellness Tips
+        </div>
+        <div class="gloss-tips-grid">
+            {tips_html}
+        </div>
+        <div class="gloss-seek-box">
+            <strong>🩺 When to Seek Professional Help:</strong><br>
             {data['seek_help']}
         </div>
-        <div class="emergency-note">
-            🚨 <b>Emergency Reminder:</b>
+        <div class="gloss-emergency-box">
+            <strong>🚨 Emergency Reminder:</strong>
             If you experience severe or life-threatening symptoms, seek immediate professional medical assistance.
             In India, call <b>112</b> (Emergency) or <b>108</b> (Ambulance).
         </div>
     </div>
     """, unsafe_allow_html=True)
 
-    st.markdown("""
-    <div class="safety-card">
-        ⚠️ <b>Important Disclaimer:</b>
-        This tool provides general health information only.
-        It <b>cannot</b> diagnose a medical condition.
-        Aarogya-AI is an AI wellness assistant — not a doctor.
-        Please consult a qualified healthcare professional for personal medical advice.
-    </div>
-    """, unsafe_allow_html=True)
+render_medical_disclaimer()

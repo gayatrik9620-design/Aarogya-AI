@@ -1,175 +1,97 @@
+import os
+import sys
+import importlib.util
 import streamlit as st
+
+# =========================================================
+# EXPLICIT ROOT PATH & Ui.py LOADER (pages/2_chatbot.py)
+# =========================================================
+
+ROOT_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
+if ROOT_DIR not in sys.path:
+    sys.path.insert(0, ROOT_DIR)
+
+_ui_loaded = False
+for _candidate in ("Ui.py", "ui.py"):
+    _ui_path = os.path.join(ROOT_DIR, _candidate)
+    if os.path.exists(_ui_path):
+        _spec = importlib.util.spec_from_file_location("Ui", _ui_path)
+        _ui_mod = importlib.util.module_from_spec(_spec)
+        _spec.loader.exec_module(_ui_mod)
+        apply_glossy_purple_theme = _ui_mod.apply_glossy_purple_theme
+        render_page_banner = _ui_mod.render_page_banner
+        render_gloss_card = _ui_mod.render_gloss_card
+        render_medical_disclaimer = _ui_mod.render_medical_disclaimer
+        _ui_loaded = True
+        break
+
+if not _ui_loaded:
+    st.error(f"Could not find Ui.py in {ROOT_DIR}. Please ensure Ui.py is saved in the root aarogya-ai folder.")
+    st.stop()
+
 from src.chatbot import get_chatbot_response
 
 # NOTE: st.set_page_config() is handled by app.py — NOT repeated here.
 
 # =========================================================
-# PAGE CSS
+# GLOSSY PURPLE THEME & CHAT STYLES
 # =========================================================
+
+apply_glossy_purple_theme()
 
 st.markdown("""
 <style>
-
-/* ---- Chat header ---- */
-.chat-header {
-    background: linear-gradient(135deg, #6546B8 0%, #8B72D9 60%, #0284C7 100%);
-    border-radius: 22px;
-    padding: 32px 36px;
-    margin-bottom: 24px;
-    display: flex;
-    align-items: center;
-    gap: 24px;
-    box-shadow: 0 8px 28px rgba(101,70,184,0.22);
-    animation: fadeDown 0.6s ease;
-}
-
-.chat-doc-avatar {
-    font-size: 72px;
-    animation: float 4s ease-in-out infinite;
-    flex-shrink: 0;
-    filter: drop-shadow(0 8px 16px rgba(0,0,0,0.15));
-}
-
-.chat-header-text h1 {
-    color: white !important;
-    font-size: 26px;
+.purple-chat-label {
+    font-size: 12.5px;
     font-weight: 800;
-    margin: 0 0 8px 0;
-    letter-spacing: -0.4px;
-}
-
-.chat-header-text p {
-    color: rgba(255,255,255,0.82);
-    font-size: 14px;
-    margin: 0;
-    line-height: 1.55;
-}
-
-.chat-badge {
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
-    background: rgba(255,255,255,0.15);
-    border: 1px solid rgba(255,255,255,0.25);
-    border-radius: 20px;
-    padding: 4px 12px;
-    font-size: 11px;
-    font-weight: 600;
-    color: white;
-    margin-bottom: 10px;
-}
-
-/* ---- Safety disclaimer ---- */
-.chat-safety {
-    background: #FFFBEB;
-    border: 1px solid #FDE68A;
-    border-left: 4px solid #F59E0B;
-    border-radius: 14px;
-    padding: 14px 18px;
-    font-size: 13px;
-    color: #92400E;
-    margin: 0 0 22px 0;
-    animation: fadeUp 0.7s ease;
-}
-
-/* ---- Quick prompt buttons ---- */
-.quick-prompt-label {
-    font-size: 12px;
-    font-weight: 600;
-    color: #94A3B8;
+    color: #4C1D95;
     text-transform: uppercase;
-    letter-spacing: 0.5px;
+    letter-spacing: 0.6px;
     margin-bottom: 10px;
 }
 
-/* ---- Feature pills ---- */
-.feat-pill {
+.gloss-feat-pill {
     display: inline-flex;
     align-items: center;
     gap: 6px;
-    background: white;
-    border: 1.5px solid #EDE9FA;
+    background: linear-gradient(145deg, #FFFFFF 0%, #F3E8FF 100%);
+    border: 1px solid rgba(192, 132, 252, 0.65);
     border-radius: 20px;
     padding: 8px 16px;
     font-size: 13px;
-    font-weight: 500;
-    color: #6546B8;
+    font-weight: 700;
+    color: #2E1065;
     margin-right: 8px;
     margin-bottom: 8px;
-    box-shadow: 0 2px 8px rgba(139,114,217,0.07);
+    box-shadow: 0 6px 16px rgba(109, 40, 217, 0.08);
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
 }
 
-/* ---- Chat area container ---- */
-.chat-container {
-    background: white;
-    border-radius: 20px;
-    border: 1px solid #EDE9FA;
-    padding: 20px;
-    margin-bottom: 16px;
-    min-height: 300px;
-    box-shadow: 0 2px 14px rgba(139,114,217,0.06);
-    animation: fadeUp 0.7s ease;
+.gloss-feat-pill:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 10px 22px rgba(126, 34, 206, 0.14);
 }
-
-/* ---- Footer ---- */
-.chat-footer {
-    text-align: center;
-    color: #94A3B8;
-    font-size: 12px;
-    padding-top: 18px;
-    border-top: 1px solid #EDE9FA;
-}
-
-@keyframes float {
-    0%, 100% { transform: translateY(0); }
-    50%       { transform: translateY(-8px); }
-}
-
-@keyframes fadeDown {
-    from { opacity:0; transform:translateY(-18px); }
-    to   { opacity:1; transform:translateY(0); }
-}
-
-@keyframes fadeUp {
-    from { opacity:0; transform:translateY(18px); }
-    to   { opacity:1; transform:translateY(0); }
-}
-
 </style>
 """, unsafe_allow_html=True)
 
-
-# =========================================================
-# HEADER
-# =========================================================
-
-st.markdown("""
-<div class="chat-header">
-    <div class="chat-doc-avatar">👩‍⚕️</div>
-    <div class="chat-header-text">
-        <div class="chat-badge">🤖 AI-Powered • Google Gemini</div>
-        <h1>Your AI Health Assistant</h1>
-        <p>
-            Ask questions about general wellness, lifestyle habits and health information.<br>
-            I'm here to provide educational guidance on your wellness journey.
-        </p>
-    </div>
-</div>
-""", unsafe_allow_html=True)
+render_page_banner(
+    symbol="🩺",
+    title="Your AI Health Assistant",
+    subtitle="Ask questions about general wellness, lifestyle habits, and health awareness. Educational guidance only.",
+    badge="🧬 Aarogya-AI • Conversational Wellness",
+)
 
 
 # =========================================================
 # SAFETY DISCLAIMER
 # =========================================================
 
-st.markdown("""
-<div class="chat-safety">
-    ⚠️ <b>Medical Safety Notice —</b>
-    Aarogya-AI provides general health information only. It does <b>not</b> diagnose diseases
-    or prescribe medications. For personal medical concerns, consult a qualified healthcare
-    professional. In an emergency call <b>112</b>.
-</div>
-""", unsafe_allow_html=True)
+render_gloss_card(
+    title="Medical Safety Notice",
+    body="Aarogya-AI provides general health and wellness information only. It does not diagnose diseases or prescribe medications. For personal medical concerns, consult a qualified healthcare professional. In an emergency, call 112.",
+    symbol="🫀",
+    anim_class="anim-2"
+)
 
 
 # =========================================================
@@ -177,22 +99,22 @@ st.markdown("""
 # =========================================================
 
 st.markdown("""
-<div>
-    <span class="feat-pill">💬 Natural language</span>
-    <span class="feat-pill">🧠 AI-powered insights</span>
-    <span class="feat-pill">🛡️ Safety-first design</span>
-    <span class="feat-pill">📊 Health-aware context</span>
+<div class="anim-2">
+    <span class="gloss-feat-pill"><span class="med-float">🩺</span> Natural Language</span>
+    <span class="gloss-feat-pill"><span class="med-float">🧬</span> AI-Powered Insights</span>
+    <span class="gloss-feat-pill"><span class="med-float">💊</span> Safety-First Design</span>
+    <span class="gloss-feat-pill"><span class="med-float">🫀</span> Health-Aware Context</span>
 </div>
 """, unsafe_allow_html=True)
 
-st.markdown('<div style="height:16px"></div>', unsafe_allow_html=True)
+st.markdown('<div style="height:14px"></div>', unsafe_allow_html=True)
 
 
 # =========================================================
 # QUICK PROMPTS
 # =========================================================
 
-st.markdown('<div class="quick-prompt-label">💡 Quick Prompts</div>', unsafe_allow_html=True)
+st.markdown('<div class="purple-chat-label anim-2">💡 Quick Prompts</div>', unsafe_allow_html=True)
 
 qp_col1, qp_col2, qp_col3, qp_col4 = st.columns(4)
 
@@ -209,11 +131,11 @@ if "health_messages" not in st.session_state:
 prompt_clicked = None
 
 with qp_col1:
-    if st.button("😴  Sleep Tips", use_container_width=True):
+    if st.button("💤  Sleep Tips", use_container_width=True):
         prompt_clicked = quick_prompts[0]
 
 with qp_col2:
-    if st.button("🌿  Lifestyle Tips", use_container_width=True):
+    if st.button("🧬  Lifestyle Tips", use_container_width=True):
         prompt_clicked = quick_prompts[1]
 
 with qp_col3:
@@ -221,7 +143,7 @@ with qp_col3:
         prompt_clicked = quick_prompts[2]
 
 with qp_col4:
-    if st.button("🏃  Activity Tips", use_container_width=True):
+    if st.button("🩺  Activity Tips", use_container_width=True):
         prompt_clicked = quick_prompts[3]
 
 st.markdown('<div style="height:10px"></div>', unsafe_allow_html=True)
@@ -242,10 +164,15 @@ with clear_col:
 # CHAT HISTORY
 # =========================================================
 
-for message in st.session_state.health_messages:
-    with st.chat_message(message["role"],
-                         avatar="👩‍⚕️" if message["role"] == "assistant" else "🧑"):
-        st.markdown(message["content"])
+with st.container(border=True):
+    if not st.session_state.health_messages:
+        st.caption("Start a conversation below or click one of the quick wellness prompts above.")
+    for message in st.session_state.health_messages:
+        with st.chat_message(
+            message["role"],
+            avatar="🩺" if message["role"] == "assistant" else "🧑"
+        ):
+            st.markdown(message["content"])
 
 
 # =========================================================
@@ -254,7 +181,6 @@ for message in st.session_state.health_messages:
 
 user_query = st.chat_input("💬 Ask Aarogya-AI a health or wellness question…")
 
-# Handle quick prompt click
 if prompt_clicked:
     user_query = prompt_clicked
 
@@ -264,7 +190,6 @@ if prompt_clicked:
 # =========================================================
 
 if user_query:
-
     st.session_state.health_messages.append({
         "role": "user",
         "content": user_query
@@ -273,12 +198,12 @@ if user_query:
     with st.chat_message("user", avatar="🧑"):
         st.markdown(user_query)
 
-    with st.chat_message("assistant", avatar="👩‍⚕️"):
-        with st.spinner("🤖 Aarogya-AI is thinking…"):
+    with st.chat_message("assistant", avatar="🩺"):
+        with st.spinner("🧬 Aarogya-AI is thinking…"):
             try:
                 response = get_chatbot_response(user_query)
                 st.markdown(response)
-            except Exception as e:
+            except Exception:
                 response = (
                     "I'm unable to process your question right now. "
                     "Please check your API key configuration and try again."
@@ -292,12 +217,7 @@ if user_query:
 
 
 # =========================================================
-# FOOTER
+# SAFETY DISCLAIMER & FOOTER
 # =========================================================
 
-st.markdown("""
-<div class="chat-footer">
-    🩺 Aarogya-AI &nbsp;·&nbsp; AI-powered wellness assistant &nbsp;·&nbsp;
-    For educational and general wellness information only.
-</div>
-""", unsafe_allow_html=True)
+render_medical_disclaimer()

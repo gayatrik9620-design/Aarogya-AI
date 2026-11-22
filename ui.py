@@ -1,231 +1,272 @@
 import streamlit as st
 
-def inject_custom_css():
-    """
-    Injects a modern, light-mode healthcare CSS theme into Streamlit.
-    """
-    st.markdown(
-        """
-        <style>
-        /* Modern Healthcare Theme Variables */
-        :root {
-            --bg-color: #F8FAFC;
-            --card-bg: #FFFFFF;
-            --primary: #0F766E;        /* Dark Teal */
-            --primary-hover: #115E59;
-            --secondary: #0284C7;      /* Soft Blue */
-            --text-dark: #0F172A;      /* Navy */
-            --text-muted: #64748B;     /* Slate */
-            --border-color: #E2E8F0;
-            --success-bg: #ECFDF5;
-            --success-text: #047857;
-            --warning-bg: #FFFBEB;
-            --warning-text: #B45309;
-            --danger-bg: #FEF2F2;
-            --danger-text: #B91C1C;
-            --radius-md: 10px;
-            --radius-lg: 16px;
-            --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.05);
-            --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
-        }
+# =========================================================
+# AAROGYA-AI SHARED GLOSSY PURPLE UI MODULE (Ui.py)
+# =========================================================
 
-        /* App Background Reset */
-        .stApp {
-            background-color: var(--bg-color);
-            color: var(--text-dark);
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-        }
 
-        /* Sidebar Styling */
-        [data-testid="stSidebar"] {
-            background-color: #FFFFFF;
-            border-right: 1px solid var(--border-color);
-        }
+def apply_glossy_purple_theme():
+    """Applies glossy purple gradient styling, glassmorphism cards, and animations."""
+    st.markdown("""
+    <style>
+    @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
 
-        /* Hide Streamlit Default Elements */
-        #MainMenu {visibility: hidden;}
-        footer {visibility: hidden;}
-        header[data-testid="stHeader"] {background-color: rgba(255,255,255,0);}
+    .stApp {
+        background:
+            radial-gradient(circle at 10% 12%, rgba(139, 92, 246, 0.20), transparent 42%),
+            radial-gradient(circle at 90% 15%, rgba(192, 132, 252, 0.18), transparent 40%),
+            radial-gradient(circle at 50% 92%, rgba(99, 102, 241, 0.14), transparent 48%),
+            linear-gradient(155deg, #FAF7FF 0%, #F3ECFF 48%, #EDE9FE 100%);
+        font-family: 'Plus Jakarta Sans', sans-serif;
+        color: #1E1035;
+    }
 
-        /* Modern Card Containers */
-        .ui-card {
-            background: var(--card-bg);
-            border: 1px solid var(--border-color);
-            border-radius: var(--radius-lg);
-            padding: 1.25rem 1.5rem;
-            margin-bottom: 1rem;
-            box-shadow: var(--shadow-sm);
-            transition: box-shadow 0.2s ease-in-out;
+    /* Keyframe Animations */
+    @keyframes violetEntrance {
+        0% {
+            opacity: 0;
+            transform: translateY(18px) scale(0.985);
         }
+        100% {
+            opacity: 1;
+            transform: translateY(0) scale(1);
+        }
+    }
 
-        .ui-card:hover {
-            box-shadow: var(--shadow-md);
+    @keyframes glassSweep {
+        0% {
+            transform: translateX(-140%) skewX(-22deg);
         }
+        55%, 100% {
+            transform: translateX(250%) skewX(-22deg);
+        }
+    }
 
-        .ui-card-title {
-            font-size: 0.875rem;
-            font-weight: 600;
-            color: var(--text-muted);
-            text-transform: uppercase;
-            letter-spacing: 0.05em;
-            margin-bottom: 0.5rem;
+    @keyframes medFloat {
+        0%, 100% {
+            transform: translateY(0px) rotate(0deg);
         }
+        50% {
+            transform: translateY(-6px) rotate(2deg);
+        }
+    }
 
-        .ui-card-value {
-            font-size: 1.75rem;
-            font-weight: 700;
-            color: var(--text-dark);
-            line-height: 1.2;
+    @keyframes pulseViolet {
+        0% {
+            box-shadow: 0 0 0 0 rgba(168, 85, 247, 0.6);
         }
+        70% {
+            box-shadow: 0 0 0 11px rgba(168, 85, 247, 0);
+        }
+        100% {
+            box-shadow: 0 0 0 0 rgba(168, 85, 247, 0);
+        }
+    }
 
-        .ui-card-subtitle {
-            font-size: 0.8125rem;
-            color: var(--text-muted);
-            margin-top: 0.35rem;
-        }
+    .anim-1 { animation: violetEntrance 0.55s cubic-bezier(0.22, 1, 0.36, 1) both; }
+    .anim-2 { animation: violetEntrance 0.62s cubic-bezier(0.22, 1, 0.36, 1) 0.08s both; }
+    .anim-3 { animation: violetEntrance 0.62s cubic-bezier(0.22, 1, 0.36, 1) 0.16s both; }
+    .anim-4 { animation: violetEntrance 0.62s cubic-bezier(0.22, 1, 0.36, 1) 0.24s both; }
 
-        /* Section Headers */
-        .page-header {
-            margin-bottom: 1.5rem;
-        }
+    .med-float {
+        display: inline-block;
+        animation: medFloat 3.5s ease-in-out infinite;
+    }
 
-        .page-header h1 {
-            color: var(--text-dark);
-            font-size: 1.875rem;
-            font-weight: 700;
-            margin-bottom: 0.25rem;
-        }
+    /* Glossy Purple Banner */
+    .ui-purple-banner {
+        position: relative;
+        overflow: hidden;
+        border-radius: 24px;
+        padding: 30px 36px;
+        background: linear-gradient(130deg, #2E1065 0%, #5B21B6 48%, #7E22CE 100%);
+        border: 1px solid rgba(255, 255, 255, 0.32);
+        box-shadow:
+            0 20px 44px rgba(76, 29, 149, 0.24),
+            inset 0 1px 0 rgba(255, 255, 255, 0.48);
+        color: #FFFFFF;
+        margin-bottom: 24px;
+    }
 
-        .page-header p {
-            color: var(--text-muted);
-            font-size: 0.95rem;
-            margin: 0;
-        }
+    .ui-purple-banner::before {
+        content: "";
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 45%;
+        height: 100%;
+        background: linear-gradient(
+            90deg,
+            rgba(255, 255, 255, 0) 0%,
+            rgba(255, 255, 255, 0.22) 50%,
+            rgba(255, 255, 255, 0) 100%
+        );
+        animation: glassSweep 5.8s ease-in-out infinite;
+        pointer-events: none;
+    }
 
-        /* Banner Alerts (Medical/Disclaimer) */
-        .alert-box {
-            padding: 1rem 1.25rem;
-            border-radius: var(--radius-md);
-            margin-bottom: 1.25rem;
-            font-size: 0.875rem;
-            line-height: 1.5;
-            border: 1px solid transparent;
-        }
+    .ui-badge-pill {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        padding: 5px 14px;
+        border-radius: 999px;
+        font-size: 12px;
+        font-weight: 700;
+        letter-spacing: 0.3px;
+        color: #F3E8FF;
+        background: rgba(255, 255, 255, 0.15);
+        backdrop-filter: blur(10px);
+        -webkit-backdrop-filter: blur(10px);
+        border: 1px solid rgba(255, 255, 255, 0.30);
+        margin-bottom: 12px;
+    }
 
-        .alert-info {
-            background-color: #F0F9FF;
-            color: #0369A1;
-            border-color: #BAE6FD;
-        }
+    .ui-pulse-dot {
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        background: #E879F9;
+        animation: pulseViolet 2.2s infinite;
+    }
 
-        .alert-warning {
-            background-color: var(--warning-bg);
-            color: var(--warning-text);
-            border-color: #FDE68A;
-        }
+    .ui-banner-title {
+        font-size: 34px;
+        font-weight: 800;
+        letter-spacing: -0.6px;
+        line-height: 1.15;
+        margin: 0 0 6px 0;
+        color: #FFFFFF;
+    }
 
-        .alert-danger {
-            background-color: var(--danger-bg);
-            color: var(--danger-text);
-            border-color: #FECACA;
-        }
+    .ui-banner-sub {
+        font-size: 15px;
+        color: #E9D5FF;
+        margin: 0;
+        line-height: 1.55;
+    }
 
-        /* Primary Button Styling */
-        div.stButton > button {
-            background-color: var(--primary);
-            color: #FFFFFF;
-            border-radius: var(--radius-md);
-            border: none;
-            padding: 0.5rem 1rem;
-            font-weight: 600;
-            width: 100%;
-            transition: background-color 0.2s ease;
-        }
+    /* Glossy Purple Card */
+    .ui-gloss-card {
+        position: relative;
+        overflow: hidden;
+        border-radius: 22px;
+        padding: 22px 24px;
+        background: linear-gradient(160deg, rgba(255, 255, 255, 0.95) 0%, rgba(243, 232, 255, 0.78) 100%);
+        backdrop-filter: blur(14px);
+        -webkit-backdrop-filter: blur(14px);
+        border: 1px solid rgba(216, 180, 254, 0.80);
+        box-shadow:
+            0 12px 26px rgba(109, 40, 217, 0.08),
+            inset 0 1px 0 rgba(255, 255, 255, 0.98);
+        margin-bottom: 18px;
+        transition: transform 0.26s ease, box-shadow 0.26s ease, border-color 0.26s ease;
+    }
 
-        div.stButton > button:hover {
-            background-color: var(--primary-hover);
-            color: #FFFFFF;
-        }
+    .ui-gloss-card:hover {
+        transform: translateY(-4px);
+        border-color: #C084FC;
+        box-shadow:
+            0 18px 34px rgba(126, 34, 206, 0.15),
+            inset 0 1px 0 rgba(255, 255, 255, 1);
+    }
 
-        /* Custom Chat Bubble Container */
-        .chat-row-user {
-            display: flex;
-            justify-content: flex-end;
-            margin-bottom: 1rem;
-        }
-        .chat-bubble-user {
-            background-color: var(--primary);
-            color: white;
-            padding: 0.75rem 1rem;
-            border-radius: 16px 16px 2px 16px;
-            max-width: 80%;
-            font-size: 0.95rem;
-        }
-        .chat-row-ai {
-            display: flex;
-            justify-content: flex-start;
-            margin-bottom: 1rem;
-        }
-        .chat-bubble-ai {
-            background-color: #FFFFFF;
-            border: 1px solid var(--border-color);
-            color: var(--text-dark);
-            padding: 0.75rem 1rem;
-            border-radius: 16px 16px 16px 2px;
-            max-width: 80%;
-            font-size: 0.95rem;
-            box-shadow: var(--shadow-sm);
-        }
-        </style>
-        """,
-        unsafe_allow_html=True,
-    )
+    .ui-card-head {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        font-size: 17px;
+        font-weight: 800;
+        color: #2E1065;
+        margin-bottom: 8px;
+    }
 
-def render_page_header(title: str, subtitle: str):
-    """Renders a standard clean top header for any page."""
-    st.markdown(
-        f"""
-        <div class="page-header">
-            <h1>{title}</h1>
-            <p>{subtitle}</p>
+    .ui-icon-chip {
+        width: 38px;
+        height: 38px;
+        border-radius: 12px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 19px;
+        background: linear-gradient(135deg, #FFFFFF 0%, #EDE9FE 100%);
+        border: 1px solid rgba(192, 132, 252, 0.55);
+        box-shadow: 0 5px 12px rgba(109, 40, 217, 0.10);
+    }
+
+    .ui-card-body {
+        font-size: 14px;
+        line-height: 1.6;
+        color: #3B0764;
+        margin: 0;
+    }
+
+    /* Streamlit Input & Button Gloss Polish */
+    div.stButton > button {
+        border-radius: 14px;
+        font-weight: 700;
+        border: 1px solid rgba(168, 85, 247, 0.45);
+        background: linear-gradient(135deg, #6D28D9 0%, #7E22CE 100%);
+        color: #FFFFFF;
+        box-shadow: 0 8px 18px rgba(109, 40, 217, 0.20);
+        transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+
+    div.stButton > button:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 12px 24px rgba(126, 34, 206, 0.30);
+        color: #FFFFFF;
+    }
+
+    /* Glossy Medical Safety Notice */
+    .ui-purple-safety {
+        border-radius: 18px;
+        padding: 15px 20px;
+        background: linear-gradient(120deg, rgba(250, 245, 255, 0.96), rgba(243, 232, 255, 0.88));
+        border: 1px solid rgba(192, 132, 252, 0.65);
+        border-left: 5px solid #6D28D9;
+        color: #2E1065;
+        font-size: 13.5px;
+        line-height: 1.55;
+        margin-top: 24px;
+        box-shadow: 0 8px 18px rgba(109, 40, 217, 0.08);
+    }
+    </style>
+    """, unsafe_allow_html=True)
+
+
+def render_page_banner(symbol: str, title: str, subtitle: str, badge: str = "🧬 Aarogya-AI Wellness Suite"):
+    """Renders an animated glossy purple top banner with a medical symbol."""
+    st.markdown(f"""
+    <div class="ui-purple-banner anim-1">
+        <div class="ui-badge-pill">
+            <span class="ui-pulse-dot"></span>
+            {badge}
         </div>
-        """,
-        unsafe_allow_html=True,
-    )
+        <div class="ui-banner-title"><span class="med-float">{symbol}</span> {title}</div>
+        <p class="ui-banner-sub">{subtitle}</p>
+    </div>
+    """, unsafe_allow_html=True)
 
-def render_metric_card(title: str, value: str, subtitle: str = ""):
-    """Renders a modern metric block."""
-    st.markdown(
-        f"""
-        <div class="ui-card">
-            <div class="ui-card-title">{title}</div>
-            <div class="ui-card-value">{value}</div>
-            <div class="ui-card-subtitle">{subtitle}</div>
-        </div>
-        """,
-        unsafe_allow_html=True,
-    )
 
-def render_insight_card(title: str, content: str, tag: str = "Aarogya-AI Insight"):
-    """Renders AI insights in a structured visual wrapper."""
-    st.markdown(
-        f"""
-        <div class="ui-card" style="border-left: 4px solid var(--primary);">
-            <div class="ui-card-title" style="color: var(--primary);">{tag}</div>
-            <h4 style="margin: 0 0 0.5rem 0; color: var(--text-dark); font-size: 1.1rem;">{title}</h4>
-            <p style="margin: 0; color: var(--text-muted); font-size: 0.925rem; line-height: 1.5;">{content}</p>
+def render_gloss_card(title: str, body: str, symbol: str = "🩺", anim_class: str = "anim-2"):
+    """Renders a glossy purple card with a medical icon badge."""
+    st.markdown(f"""
+    <div class="ui-gloss-card {anim_class}">
+        <div class="ui-card-head">
+            <span class="ui-icon-chip med-float">{symbol}</span>
+            <span>{title}</span>
         </div>
-        """,
-        unsafe_allow_html=True,
-    )
+        <p class="ui-card-body">{body}</p>
+    </div>
+    """, unsafe_allow_html=True)
 
-def render_safety_disclaimer():
-    """Responsible medical disclaimer alert box."""
-    st.markdown(
-        """
-        <div class="alert-box alert-warning">
-            <strong>Medical Safety Notice:</strong> Aarogya-AI provides health informational insights powered by AI. It is not a licensed physician or a diagnostic tool. Do not alter medications or treatment plans without consulting a qualified medical practitioner.
-        </div>
-        """,
-        unsafe_allow_html=True,
-    )
+
+def render_medical_disclaimer():
+    """Renders the standard medical safety footer across pages."""
+    st.markdown("""
+    <div class="ui-purple-safety anim-3">
+        <strong>🩺 Medical Safety Notice:</strong> Aarogya-AI provides general wellness information and educational support.
+        It does not replace professional medical advice, diagnosis, or treatment.
+    </div>
+    """, unsafe_allow_html=True)
