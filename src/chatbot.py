@@ -31,8 +31,17 @@ def get_model_name() -> str:
 
 
 def get_api_key() -> str:
-    load_dotenv(dotenv_path=ENV_PATH, override=True)
-    raw_key = os.getenv("GOOGLE_API_KEY", "")
+    load_dotenv(dotenv_path=ENV_PATH)
+
+    try:
+        import streamlit as st
+        raw_key = st.secrets.get("GOOGLE_API_KEY", "")
+    except Exception:
+        raw_key = ""
+
+    if not raw_key:
+        raw_key = os.getenv("GOOGLE_API_KEY", "")
+
     return (raw_key or "").strip().strip('"').strip("'")
 
 
