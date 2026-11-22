@@ -473,7 +473,7 @@ elif page_key.startswith("🩺"):
     run_page("pages/9_Symptom_Information.py")
 
 elif page_key.startswith("🛡️"):
-    run_page("pages/11_Medication _Safety.py")
+    run_page("pages/11_Medication_Safety.py")
 
 elif page_key.startswith("🚨"):
     run_page("pages/12_Emergency_Detection.py")
