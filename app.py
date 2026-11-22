@@ -8,11 +8,11 @@ st.set_page_config(
     page_title="Aarogya-AI | Intelligent Wellness",
     page_icon="🩺",
     layout="wide",
-    initial_sidebar_state="expanded"
+    initial_sidebar_state="auto"
 )
 
 # --------------------------------------------------
-# GLOBAL CSS DESIGN SYSTEM
+# GLOBAL CSS DESIGN SYSTEM (MODERN GLOSSY PURPLE)
 # --------------------------------------------------
 
 st.markdown("""
@@ -27,7 +27,10 @@ st.markdown("""
 
 /* ===== APP BACKGROUND ===== */
 .stApp {
-    background-color: #F8F7FC;
+    background:
+        radial-gradient(circle at 12% 10%, rgba(124, 58, 237, 0.09), transparent 38%),
+        radial-gradient(circle at 88% 18%, rgba(147, 51, 234, 0.08), transparent 40%),
+        #F6F4FD;
     color: #1E293B;
 }
 
@@ -35,6 +38,7 @@ st.markdown("""
 #MainMenu { visibility: hidden; }
 footer { visibility: hidden; }
 [data-testid="stDecoration"] { display: none; }
+[data-testid="stSidebarNav"] { display: none !important; }
 
 header[data-testid="stHeader"] {
     background: transparent !important;
@@ -46,11 +50,12 @@ button[kind="header"] {
     pointer-events: auto !important;
     visibility: visible !important;
     opacity: 1 !important;
-    color: #6546B8 !important;
-    background: #FFFFFF !important;
-    border: 1px solid #EDE9FA !important;
-    border-radius: 10px !important;
-    box-shadow: 0 2px 10px rgba(101, 70, 184, 0.15) !important;
+    color: #5B21B6 !important;
+    background: rgba(255, 255, 255, 0.94) !important;
+    backdrop-filter: blur(12px) !important;
+    border: 1px solid rgba(124, 58, 237, 0.28) !important;
+    border-radius: 12px !important;
+    box-shadow: 0 4px 16px rgba(91, 33, 182, 0.18) !important;
 }
 
 /* ===== MAIN CONTENT AREA ===== */
@@ -59,82 +64,170 @@ button[kind="header"] {
     max-width: 1280px;
 }
 
-/* ===== SIDEBAR ===== */
+/* ===== GLOSSY PURPLE SIDEBAR ===== */
 [data-testid="stSidebar"] {
-    background: #FFFFFF;
-    border-right: 1px solid #EDE9FA;
-    box-shadow: 2px 0 20px rgba(139,114,217,0.06);
+    background: linear-gradient(180deg, #FDFCFF 0%, #F3EEFF 55%, #EAE2FF 100%);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border-right: 1px solid rgba(124, 58, 237, 0.16);
+    box-shadow: 6px 0 30px rgba(91, 33, 182, 0.08);
 }
 
 [data-testid="stSidebar"] > div:first-child {
     padding: 0;
 }
 
-/* ===== SIDEBAR BRAND ===== */
-.sidebar-brand {
-    padding: 28px 20px 20px 20px;
-    background: linear-gradient(135deg, #6546B8 0%, #8B72D9 100%);
-    margin-bottom: 0;
+/* ===== BRAND BANNER ===== */
+.brand-box {
+    margin: 14px 14px 10px 14px;
+    padding: 20px 18px;
+    border-radius: 20px;
+    background: linear-gradient(135deg, #4C1D95 0%, #6D28D9 55%, #8B5CF6 100%);
+    box-shadow:
+        0 10px 24px rgba(76, 29, 149, 0.28),
+        inset 0 1px 1px rgba(255, 255, 255, 0.35);
+    border: 1px solid rgba(255, 255, 255, 0.22);
+    position: relative;
+    overflow: hidden;
 }
 
-.sidebar-logo {
-    font-size: 22px;
+.brand-box::before {
+    content: "";
+    position: absolute;
+    top: -45%;
+    right: -25%;
+    width: 140px;
+    height: 140px;
+    background: radial-gradient(circle, rgba(255, 255, 255, 0.28), transparent 70%);
+    pointer-events: none;
+}
+
+.brand-title {
+    font-size: 20px;
     font-weight: 800;
     color: #FFFFFF;
     letter-spacing: -0.3px;
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    margin-bottom: 4px;
+    line-height: 1.2;
 }
 
-.sidebar-tagline {
-    font-size: 11px;
-    color: rgba(255,255,255,0.75);
-    font-weight: 400;
-    letter-spacing: 0.3px;
+.brand-sub {
+    font-size: 11.5px;
+    color: rgba(255, 255, 255, 0.86);
+    margin-top: 5px;
+    font-weight: 500;
 }
 
-/* ===== SIDEBAR DIVIDER ===== */
-.sidebar-divider {
-    height: 1px;
-    background: #EDE9FA;
-    margin: 12px 16px;
-}
-
-/* ===== SIDEBAR SECTION LABEL ===== */
-.sidebar-section {
-    font-size: 10px;
-    font-weight: 600;
-    color: #94A3B8;
-    letter-spacing: 0.8px;
+.nav-caption {
+    font-size: 10.5px;
+    font-weight: 700;
+    color: #6D28D9;
+    letter-spacing: 1px;
     text-transform: uppercase;
-    padding: 8px 20px 4px 20px;
+    padding: 12px 20px 6px 20px;
+}
+
+/* ===== CLEAN GLOSSY NAV ITEMS (NO RADIO CIRCLES) ===== */
+div[data-testid="stSidebar"] .stRadio > label {
+    display: none !important;
+}
+
+div[data-testid="stSidebar"] .stRadio > div[role="radiogroup"] {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    padding: 4px 14px 10px 14px;
+}
+
+/* Hide radio circle input & its visual wrapper */
+div[data-testid="stSidebar"] .stRadio [role="radiogroup"] label > div:first-child {
+    display: none !important;
+}
+
+div[data-testid="stSidebar"] .stRadio [role="radiogroup"] > label {
+    width: 100%;
+    margin: 0 !important;
+    padding: 10px 14px !important;
+    border-radius: 14px !important;
+    background: rgba(255, 255, 255, 0.72) !important;
+    border: 1px solid rgba(124, 58, 237, 0.14) !important;
+    box-shadow: 0 2px 8px rgba(91, 33, 182, 0.04) !important;
+    transition: all 0.22s ease !important;
+    cursor: pointer !important;
+    display: flex !important;
+    align-items: center !important;
+}
+
+div[data-testid="stSidebar"] .stRadio [role="radiogroup"] > label:hover {
+    background: rgba(139, 92, 246, 0.14) !important;
+    border-color: rgba(124, 58, 237, 0.36) !important;
+    transform: translateX(4px) !important;
+    box-shadow: 0 6px 16px rgba(91, 33, 182, 0.12) !important;
+}
+
+div[data-testid="stSidebar"] .stRadio [role="radiogroup"] > label:has(input:checked) {
+    background: linear-gradient(135deg, #5B21B6 0%, #7C3AED 60%, #9333EA 100%) !important;
+    border: 1px solid rgba(255, 255, 255, 0.28) !important;
+    box-shadow:
+        0 8px 20px rgba(91, 33, 182, 0.32),
+        inset 0 1px 1px rgba(255, 255, 255, 0.35) !important;
+    transform: translateX(4px) !important;
+}
+
+div[data-testid="stSidebar"] .stRadio div[data-testid="stMarkdownContainer"] {
+    width: 100%;
+}
+
+div[data-testid="stSidebar"] .stRadio div[data-testid="stMarkdownContainer"] p {
+    font-size: 13.5px !important;
+    font-weight: 600 !important;
+    color: #2E1065 !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    line-height: 1.35 !important;
+}
+
+div[data-testid="stSidebar"] .stRadio [role="radiogroup"] > label:has(input:checked) div[data-testid="stMarkdownContainer"] p {
+    color: #FFFFFF !important;
+    font-weight: 700 !important;
+}
+
+/* ===== SAFETY FOOTER CARD ===== */
+.sidebar-safety-box {
+    margin: 12px 14px 18px 14px;
+    padding: 13px 14px;
+    border-radius: 15px;
+    background: rgba(255, 255, 255, 0.78);
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(124, 58, 237, 0.16);
+    font-size: 11px;
+    color: #475569;
+    line-height: 1.55;
 }
 
 /* ===== GLOBAL CARD ===== */
 .card {
-    background: #FFFFFF;
+    background: rgba(255, 255, 255, 0.9);
+    backdrop-filter: blur(12px);
     border-radius: 20px;
-    border: 1px solid rgba(139,114,217,0.08);
-    box-shadow: 0 2px 16px rgba(139,114,217,0.06);
+    border: 1px solid rgba(124, 58, 237, 0.12);
+    box-shadow: 0 4px 20px rgba(91, 33, 182, 0.06);
     padding: 24px;
     transition: all 0.25s ease;
 }
 
 .card:hover {
-    box-shadow: 0 6px 28px rgba(139,114,217,0.12);
+    box-shadow: 0 8px 28px rgba(91, 33, 182, 0.12);
     transform: translateY(-2px);
 }
 
 /* ===== PAGE HEADER CARD ===== */
 .page-header {
-    background: linear-gradient(135deg, #6546B8 0%, #8B72D9 60%, #0284C7 100%);
+    background: linear-gradient(135deg, #4C1D95 0%, #6D28D9 55%, #8B5CF6 100%);
     border-radius: 22px;
     padding: 32px 36px;
     color: white;
     margin-bottom: 28px;
-    box-shadow: 0 8px 30px rgba(101,70,184,0.25);
+    box-shadow: 0 10px 30px rgba(91, 33, 182, 0.24);
     animation: fadeDown 0.6s ease;
 }
 
@@ -147,7 +240,7 @@ button[kind="header"] {
 }
 
 .page-header p {
-    color: rgba(255,255,255,0.85);
+    color: rgba(255, 255, 255, 0.88);
     font-size: 15px;
     margin: 0;
     font-weight: 400;
@@ -155,18 +248,18 @@ button[kind="header"] {
 
 /* ===== METRIC CARD ===== */
 .metric-card {
-    background: white;
+    background: rgba(255, 255, 255, 0.94);
     border-radius: 18px;
     padding: 22px;
-    border: 1px solid rgba(139,114,217,0.08);
-    box-shadow: 0 2px 14px rgba(139,114,217,0.06);
+    border: 1px solid rgba(124, 58, 237, 0.12);
+    box-shadow: 0 4px 16px rgba(91, 33, 182, 0.06);
     transition: all 0.25s ease;
     animation: fadeUp 0.6s ease;
 }
 
 .metric-card:hover {
     transform: translateY(-4px);
-    box-shadow: 0 8px 24px rgba(139,114,217,0.14);
+    box-shadow: 0 10px 24px rgba(91, 33, 182, 0.14);
 }
 
 .metric-icon {
@@ -216,8 +309,8 @@ button[kind="header"] {
 /* ===== INSIGHT / INFO CARDS ===== */
 .insight-card {
     background: linear-gradient(135deg, #F0EDFD 0%, #EDE9FA 100%);
-    border: 1px solid rgba(139,114,217,0.15);
-    border-left: 4px solid #8B72D9;
+    border: 1px solid rgba(124, 58, 237, 0.18);
+    border-left: 4px solid #7C3AED;
     border-radius: 14px;
     padding: 18px 20px;
     margin: 12px 0;
@@ -274,9 +367,9 @@ div.stButton > button {
 
 div.stButton > button:hover {
     transform: translateY(-2px);
-    box-shadow: 0 4px 14px rgba(139,114,217,0.2);
-    border-color: #8B72D9;
-    color: #6546B8;
+    box-shadow: 0 4px 14px rgba(124, 58, 237, 0.2);
+    border-color: #7C3AED;
+    color: #5B21B6;
 }
 
 div.stDownloadButton > button {
@@ -288,7 +381,7 @@ div.stDownloadButton > button {
 
 div.stDownloadButton > button:hover {
     transform: translateY(-2px);
-    box-shadow: 0 4px 14px rgba(139,114,217,0.2);
+    box-shadow: 0 4px 14px rgba(124, 58, 237, 0.2);
 }
 
 /* ===== FORM ELEMENTS ===== */
@@ -303,8 +396,8 @@ div.stSelectbox > div > div {
 
 div.stTextInput > div > div > input:focus,
 div.stNumberInput > div > div > input:focus {
-    border-color: #8B72D9;
-    box-shadow: 0 0 0 3px rgba(139,114,217,0.1);
+    border-color: #7C3AED;
+    box-shadow: 0 0 0 3px rgba(124, 58, 237, 0.12);
 }
 
 /* ===== DATAFRAME ===== */
@@ -316,7 +409,7 @@ div.stNumberInput > div > div > input:focus {
 
 /* ===== PROGRESS BAR ===== */
 div.stProgress > div > div > div {
-    background: linear-gradient(90deg, #8B72D9, #6546B8);
+    background: linear-gradient(90deg, #7C3AED, #5B21B6);
     border-radius: 10px;
 }
 
@@ -336,33 +429,6 @@ div.stProgress > div > div {
 .stChatInputContainer {
     border-radius: 18px !important;
     border: 2px solid #EDE9FA !important;
-}
-
-/* ===== RADIO (SIDEBAR NAV) ===== */
-div[data-testid="stSidebar"] .stRadio > label {
-    display: none;
-}
-
-div[data-testid="stSidebar"] .stRadio > div {
-    gap: 3px;
-    padding: 8px 12px;
-}
-
-div[data-testid="stSidebar"] .stRadio div[data-testid="stMarkdownContainer"] p {
-    font-size: 14px;
-    font-weight: 500;
-    color: #475569;
-    padding: 10px 12px;
-    border-radius: 10px;
-    cursor: pointer;
-    transition: all 0.2s ease;
-    margin: 0;
-}
-
-div[data-testid="stSidebar"] .stRadio [data-checked="true"] div[data-testid="stMarkdownContainer"] p {
-    background: #EDE9FA;
-    color: #6546B8;
-    font-weight: 600;
 }
 
 /* ===== MOBILE RESPONSIVE ADJUSTMENTS ===== */
@@ -429,13 +495,13 @@ hr {
 with st.sidebar:
 
     st.markdown("""
-    <div class="sidebar-brand">
-        <div class="sidebar-logo">🩺 AAROGYA-AI</div>
-        <div class="sidebar-tagline">Intelligent Wellness Companion</div>
+    <div class="brand-box">
+        <div class="brand-title">🩺 AAROGYA-AI</div>
+        <div class="brand-sub">Intelligent Wellness Companion</div>
     </div>
     """, unsafe_allow_html=True)
 
-    st.markdown('<div class="sidebar-section">NAVIGATION</div>', unsafe_allow_html=True)
+    st.markdown('<div class="nav-caption">Health Modules</div>', unsafe_allow_html=True)
 
     page = st.radio(
         "Navigation",
@@ -454,16 +520,11 @@ with st.sidebar:
         label_visibility="collapsed"
     )
 
-    st.markdown('<div style="height:20px"></div>', unsafe_allow_html=True)
-    st.markdown('<div class="sidebar-divider"></div>', unsafe_allow_html=True)
-
     st.markdown("""
-    <div style="padding:12px 20px;">
-        <div style="font-size:11px;color:#94A3B8;line-height:1.6;">
-            🛡️ <b style="color:#64748B;">Safety Notice</b><br>
-            General wellness only.<br>
-            Not a substitute for medical advice.
-        </div>
+    <div class="sidebar-safety-box">
+        🛡️ <b style="color:#4C1D95;">Safety Notice</b><br>
+        General wellness guidance only.<br>
+        Not a substitute for medical care.
     </div>
     """, unsafe_allow_html=True)
 
