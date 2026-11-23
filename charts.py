@@ -23,8 +23,8 @@ def _empty(msg):
     return _style(fig, 200)
 
 
-def adherence_by_day(days=14):
-    df = dose_history(days)
+def adherence_by_day(uid, days=14):
+    df = dose_history(uid, days)
     if df.empty:
         return _empty("No dose logs yet")
     d = df.groupby("log_date")["status"].apply(lambda s: 100 * (s == "taken").mean()).reset_index(name="pct")
@@ -34,8 +34,8 @@ def adherence_by_day(days=14):
     return _style(fig)
 
 
-def adherence_by_med(days=14):
-    df = dose_history(days)
+def adherence_by_med(uid, days=14):
+    df = dose_history(uid, days)
     if df.empty:
         return _empty("No dose logs yet")
     d = df.groupby("medication")["status"].apply(lambda s: round(100 * (s == "taken").mean())).reset_index(name="pct")
@@ -45,8 +45,8 @@ def adherence_by_med(days=14):
     return _style(fig)
 
 
-def status_mix(days=14):
-    df = dose_history(days)
+def status_mix(uid, days=14):
+    df = dose_history(uid, days)
     if df.empty:
         return _empty("No dose logs yet")
     d = df["status"].value_counts().reset_index()
@@ -56,8 +56,8 @@ def status_mix(days=14):
     return _style(fig)
 
 
-def steps_chart(days=14):
-    df = get_wellness(days)
+def steps_chart(uid, days=14):
+    df = get_wellness(uid, days)
     if df.empty:
         return _empty("No wellness logs yet")
     fig = px.bar(df, x="log_date", y="steps", title="Daily steps")
@@ -65,8 +65,8 @@ def steps_chart(days=14):
     return _style(fig)
 
 
-def sleep_water_chart(days=14):
-    df = get_wellness(days)
+def sleep_water_chart(uid, days=14):
+    df = get_wellness(uid, days)
     if df.empty:
         return _empty("No wellness logs yet")
     fig = go.Figure()
@@ -76,8 +76,8 @@ def sleep_water_chart(days=14):
     return _style(fig)
 
 
-def symptom_chart():
-    df = get_checkins(200)
+def symptom_chart(uid):
+    df = get_checkins(uid, 200)
     df = df[df["symptom"] != "None"] if not df.empty else df
     if df.empty:
         return _empty("No side-effect check-ins yet")

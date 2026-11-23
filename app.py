@@ -196,34 +196,85 @@ def flash(level, msg):
     banner(level, msg)
 
 
+LOGO = '<svg width="30" height="30" viewBox="0 0 24 24" fill="#fff"><path d="M9 2h6v7h7v6h-7v7H9v-7H2V9h7z"/></svg>'
+
+
+def start_session(uid, username):
+    st.session_state["uid"], st.session_state["user"] = int(uid), username
+    st.rerun()
+
+
+def show_login():
+    """Sign-in / create-account screen. Nothing else is shown until the user is signed in."""
+    st.markdown(f'<div class="hero"><div class="logo">{LOGO}</div><div class="title">{APP_NAME}</div></div>',
+                unsafe_allow_html=True)
+    st.caption("Sign in to see your own medicines and health logs.")
+    _, mid, _ = st.columns([1, 2, 1])
+    with mid:
+        t_in, t_new = st.tabs(["Sign in", "Create account"])
+        with t_in:
+            with st.form("signin"):
+                user = st.text_input("Username")
+                pw = st.text_input("Password", type="password")
+                if st.form_submit_button("Sign in"):
+                    found = db.login(user, pw)
+                    if found:
+                        start_session(found, user.strip().lower())
+                    banner("warn", "Wrong username or password.")
+        with t_new:
+            with st.form("signup"):
+                new_user = st.text_input("Choose a username")
+                new_pw = st.text_input("Choose a password (6+ characters)", type="password")
+                sample = st.checkbox("Fill my account with sample data")
+                if st.form_submit_button("Create account"):
+                    new_id, err = db.register(new_user, new_pw, sample)
+                    if new_id:
+                        start_session(new_id, new_user.strip().lower())
+                    banner("warn", err)
+        if st.button("Try the demo (shared sample data)", key="demo_btn"):
+            start_session(db.demo_user_id(), "demo")
+        banner("info", "Do not enter real patient details in the public demo. MedCheck is for tracking and information only.")
+
+
+if "uid" not in st.session_state:
+    show_login()
+    st.stop()
+uid = st.session_state["uid"]
+
 # ---------- Header ----------
 mode = " - Gemini AI assistant on" if GOOGLE_API_KEY else ""
 st.markdown(f"""<div class="hero"><div class="logo"><svg width="30" height="30" viewBox="0 0 24 24" fill="#fff">
 <path d="M9 2h6v7h7v6h-7v7H9v-7H2V9h7z"/></svg></div><div class="title">{APP_NAME}</div>
 <svg class="ecg" width="240" height="44" viewBox="0 0 240 44"><path pathLength="100" d="M0 24H70L80 24L90 6L104 40L116 16L124 24H240"/></svg></div>""",
             unsafe_allow_html=True)
-st.caption(f"Dose timing, meal and side-effect check-ins{mode}")
+who = st.session_state["user"]
+c1, c2 = st.columns([5, 1])
+c1.caption(f"Signed in as {who}" + (" (shared demo account, data may be seen by others and can reset)" if who == "demo" else "")
+           + f" - dose timing, meal and side-effect check-ins{mode}")
+if c2.button("Sign out", key="signout"):
+    st.session_state.clear()
+    st.rerun()
 
 tabs = st.tabs(["Overview", "Today's doses", "Check-in", "Wellness", "Medicines", "Assistant", "Export"])
-sched = db.today_schedule()
+sched = db.today_schedule(uid)
 
 # ---------- Overview ----------
 with tabs[0]:
     taken = int((sched["status"] == "taken").sum())
-    wl = db.get_wellness(1)
+    wl = db.get_wellness(uid, 1)
     today_row = wl[wl["log_date"] == str(date.today())]
     steps = int(today_row["steps"].iloc[0]) if not today_row.empty else 0
     c1, c2, c3, c4 = st.columns(4)
-    with c1: metric("7-day adherence", f"{db.adherence_pct(7)}%", "doses taken on record")
+    with c1: metric("7-day adherence", f"{db.adherence_pct(uid, 7)}%", "doses taken on record")
     with c2: metric("Today", f"{taken}/{len(sched)}", "doses taken")
     with c3: metric("Steps today", f"{steps:,}", "log them in Wellness")
     with c4: metric("Medicines", len(sched), "active")
     a, b = st.columns([3, 2])
-    show_chart(a, charts.adherence_by_day(), "pc1")
-    show_chart(b, charts.status_mix(), "pc2")
+    show_chart(a, charts.adherence_by_day(uid), "pc1")
+    show_chart(b, charts.status_mix(uid), "pc2")
     a, b = st.columns(2)
-    show_chart(a, charts.adherence_by_med(), "pc3")
-    show_chart(b, charts.steps_chart(), "pc4")
+    show_chart(a, charts.adherence_by_med(uid), "pc3")
+    show_chart(b, charts.steps_chart(uid), "pc4")
 
 # ---------- Today's doses ----------
 with tabs[1]:
@@ -238,11 +289,11 @@ with tabs[1]:
         c1, c2, c3, c4 = st.columns([2, 1, 1, 3])
         meal = c1.selectbox("Food context", MEAL_OPTIONS, key=f"meal{r['id']}", label_visibility="collapsed")
         if c2.button("Taken", key=f"t{r['id']}", use_container_width=True):
-            db.log_dose(int(r["id"]), "taken", meal)
+            db.log_dose(uid, int(r["id"]), "taken", meal)
             st.session_state[f"msg{r['id']}"] = agent.timing_check(r["food_rule"], meal, r["schedule_time"])
             st.rerun()
         if c3.button("Skipped", key=f"s{r['id']}", use_container_width=True):
-            db.log_dose(int(r["id"]), "skipped")
+            db.log_dose(uid, int(r["id"]), "skipped")
             st.session_state[f"msg{r['id']}"] = ("info", "Skipped dose logged. Ask your doctor what to do if you skip often.")
             st.rerun()
         if f"msg{r['id']}" in st.session_state:
@@ -252,7 +303,7 @@ with tabs[1]:
 # ---------- Check-in ----------
 with tabs[2]:
     st.subheader("How are you feeling?")
-    meds = db.get_meds()
+    meds = db.get_meds(uid)
     with st.form("checkin", clear_on_submit=True):
         c1, c2 = st.columns(2)
         med_name = c1.selectbox("Medicine", ["General"] + list(meds["name"]))
@@ -262,13 +313,13 @@ with tabs[2]:
         note = st.text_input("Note (optional)")
         if st.form_submit_button("Save check-in"):
             mid = None if med_name == "General" else int(meds[meds["name"] == med_name]["id"].iloc[0])
-            db.add_checkin(mid, meal, symptom, severity, note)
+            db.add_checkin(uid, mid, meal, symptom, severity, note)
             banner("ok", "Check-in saved.")
             if symptom != "None":
                 flash("warn" if severity >= 3 else "info", agent.severity_advice(severity))
     a, b = st.columns([3, 2])
-    a.dataframe(db.get_checkins(20), use_container_width=True, hide_index=True)
-    show_chart(b, charts.symptom_chart(), "pc5")
+    a.dataframe(db.get_checkins(uid, 20), use_container_width=True, hide_index=True)
+    show_chart(b, charts.symptom_chart(uid), "pc5")
 
 # ---------- Wellness ----------
 with tabs[3]:
@@ -281,12 +332,12 @@ with tabs[3]:
         sleep = c4.number_input("Sleep (hrs)", 0.0, 24.0, 7.0, 0.5)
         notes = st.text_input("Health notes")
         if st.form_submit_button("Save log"):
-            db.save_wellness(day, steps_in, water, sleep, notes)
+            db.save_wellness(uid, day, steps_in, water, sleep, notes)
             banner("ok", "Wellness log saved.")
     a, b = st.columns(2)
-    show_chart(a, charts.steps_chart(), "pc6")
-    show_chart(b, charts.sleep_water_chart(), "pc7")
-    st.dataframe(db.get_wellness(30).sort_values("log_date", ascending=False), use_container_width=True, hide_index=True)
+    show_chart(a, charts.steps_chart(uid), "pc6")
+    show_chart(b, charts.sleep_water_chart(uid), "pc7")
+    st.dataframe(db.get_wellness(uid, 30).sort_values("log_date", ascending=False), use_container_width=True, hide_index=True)
 
 # ---------- Medicines ----------
 with tabs[4]:
@@ -300,16 +351,16 @@ with tabs[4]:
         notes = st.text_input("Notes (optional)")
         if st.form_submit_button("Add medicine"):
             if name.strip():
-                db.add_med(name, dose, t.strftime("%H:%M"), rule, notes)
+                db.add_med(uid, name, dose, t.strftime("%H:%M"), rule, notes)
                 st.rerun()
             else:
                 banner("warn", "Enter a medicine name.")
-    for _, r in db.get_meds().iterrows():
+    for _, r in db.get_meds(uid).iterrows():
         c1, c2 = st.columns([5, 1])
         c1.markdown(f'<div class="glass"><b>{r["name"]}</b> {r["dose"]} at {r["schedule_time"]} · '
                     f'{FOOD_RULES.get(r["food_rule"], "Any time")}</div>', unsafe_allow_html=True)
         if c2.button("Remove", key=f"rm{r['id']}"):
-            db.remove_med(int(r["id"]))
+            db.remove_med(uid, int(r["id"]))
             st.rerun()
 
 # ---------- Assistant ----------
@@ -323,7 +374,7 @@ with tabs[5]:
     question = st.text_area("Your question", key="question", placeholder="e.g. Can I take vitamin D3 on an empty stomach?")
     if st.button("Ask") and question.strip():
         with st.spinner("Thinking..."):
-            answer, used = agent.ask_assistant(question, db.get_meds(), db.adherence_pct(7))
+            answer, used = agent.ask_assistant(question, db.get_meds(uid), db.adherence_pct(uid, 7))
         st.markdown(f'<div class="glass"><span class="pill taken">{used}</span><br><br>{answer}</div>', unsafe_allow_html=True)
 
 # ---------- Export ----------
@@ -332,7 +383,7 @@ with tabs[6]:
     for kind, label in [("doses", "Medication history"), ("wellness", "Wellness logs"), ("checkins", "Side-effect check-ins")]:
         c1, c2, c3 = st.columns([3, 1, 1])
         c1.markdown(f"**{label}**")
-        c2.download_button("CSV", db.export_data(kind, "csv"), f"{kind}.csv", "text/csv", key=f"{kind}c")
-        c3.download_button("JSON", db.export_data(kind, "json"), f"{kind}.json", "application/json", key=f"{kind}j")
+        c2.download_button("CSV", db.export_data(uid, kind, "csv"), f"{kind}.csv", "text/csv", key=f"{kind}c")
+        c3.download_button("JSON", db.export_data(uid, kind, "json"), f"{kind}.json", "application/json", key=f"{kind}j")
 
 st.markdown(f'<div class="disclaimer">⚕️ {DISCLAIMER}</div>', unsafe_allow_html=True)
