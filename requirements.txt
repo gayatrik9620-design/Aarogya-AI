@@ -1,6 +1,6 @@
-streamlit
-langchain
-langchain-core
-langchain-google-genai
-python-dotenv
-matplotlib
+streamlit>=1.35,<2.0
+pandas>=2.0
+plotly>=5.20
+python-dotenv>=1.0
+langchain-core>=0.3
+langchain-google-genai>=2.0
